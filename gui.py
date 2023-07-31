@@ -7,7 +7,7 @@ from jproperties import Properties
 from datetime import datetime
 
 
-class App(ctk.CTk):
+class Gui(ctk.CTk):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -75,7 +75,7 @@ class App(ctk.CTk):
                                        command=lambda: Thread(target=self.go).start())
         self.go_button.pack(pady=12, padx=10)
 
-        self.deconvolver = Deconvolver
+        self.deconvolver = Deconvolver()
 
     def save_properties(self):
         with open(".properties", "w") as file:
@@ -98,23 +98,34 @@ class App(ctk.CTk):
                 filenames.append(stripped_line)
         properties = Properties()
         properties.load(self.model_selection_textbox.get("1.0", ctk.END))
-        experiment_label = datetime.now().strftime("%m_%d_%Y__%H_%M_%S")
+        experiment_label = datetime.now().strftime("experiment_%m_%d_%Y__%H_%M_%S")
         if len(filenames) > 0:
             self.progress_label.configure(text="Progress: 0.00%")
             self.progress_bar.start()
             self.progress_textbox.delete(1.0, ctk.END)
+            self.progress_textbox.insert(ctk.END, "{ts}: start\n".format(
+                ts=datetime.now().strftime("%H:%M:%S")))
             for i in range(len(filenames)):
                 filename = filenames[i]
-                deconvolution_status = self.deconvolver.deconvolve(filename, experiment_label, properties.properties)
-                self.progress_textbox.insert(ctk.END,
-                                             "OK: " + filename + "\n" if deconvolution_status == 0 else "ERROR: " + filename + "\n")
+                deconvolution_status = self.deconvolver.deconvolve(
+                    signal_file_abs_path=filename,
+                    experiment_label=experiment_label,
+                    properties=properties.properties)
+                self.progress_textbox.insert(ctk.END, "{ts}: {status} {filename}\n".format(
+                    ts=datetime.now().strftime("%H:%M:%S"),
+                    status={True: "OK", False: "ERROR"}[deconvolution_status == 0],
+                    filename=filename
+                ))
                 self.progress_label.configure(text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
             self.progress_bar.stop()
+            self.progress_textbox.insert(ctk.END, "{ts}: finished\n".format(
+                ts=datetime.now().strftime("%H:%M:%S")
+            ))
         else:
             self.progress_label.configure(text="Progress:")
-        self.progress_bar.set(0.0)
-        self.progress_textbox.delete(1.0, ctk.END)
-        self.progress_textbox.insert(ctk.END, "no signal file(s) selected")
+            self.progress_bar.set(0.0)
+            self.progress_textbox.delete(1.0, ctk.END)
+            self.progress_textbox.insert(ctk.END, "no signal file(s) selected")
 
     def select_files(self):
         filetypes = (

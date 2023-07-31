@@ -12,7 +12,7 @@ import pandas
 
 
 class Deconvolver:
-    def deconvolve(self, file_absolute_path, experiment_label, properties):
+    def deconvolve(self, signal_file_abs_path, experiment_label, properties):
         try:
             method = optional_property_str(properties.get("method"), "differential_evolution")
             n_gauss = optional_property_int(properties.get("n_gauss"), 0)
@@ -34,11 +34,11 @@ class Deconvolver:
                 properties.get("lorentz_peak_sigma_max_default"),
                 100.0)
 
-            file_directory = path_utils.dirname(file_absolute_path)
-            file_name_with_extension = path_utils.basename(file_absolute_path)
+            file_directory = path_utils.dirname(signal_file_abs_path)
+            file_name_with_extension = path_utils.basename(signal_file_abs_path)
             file_name_root, file_name_extension = path_utils.splitext(file_name_with_extension)
 
-            data = pandas.read_csv(file_absolute_path, delim_whitespace=True)
+            data = pandas.read_csv(signal_file_abs_path, delim_whitespace=True)
 
             x = data["#Wave"].tolist()
             signal = data["#Intensity"].tolist()
@@ -200,11 +200,11 @@ class Deconvolver:
             return 1
 
 
-def optional_property_str(property, default):
-    if property is None:
+def optional_property_str(prop, default):
+    if prop is None:
         return default
     else:
-        return property
+        return prop
 
 
 def optional_property_bool(prop, default):

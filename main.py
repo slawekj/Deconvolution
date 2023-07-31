@@ -1,4 +1,4 @@
-from app import App
+from gui import Gui
 
-app = App()
-app.mainloop()
+gui = Gui()
+gui.mainloop()
