@@ -129,6 +129,7 @@ class Gui(ctk.CTk):
 
     def select_files(self):
         filetypes = (
+            ('Text files', '*.dpt'),
             ('Text files', '*.txt'),
             ('All files', '*.*')
         )

@@ -14,6 +14,7 @@ import pandas
 class Deconvolver:
     def deconvolve(self, signal_file_abs_path, experiment_label, properties):
         try:
+            format = optional_property_str(properties.get("format"), "txt")
             method = optional_property_str(properties.get("method"), "differential_evolution")
             n_gauss = optional_property_int(properties.get("n_gauss"), 0)
             n_lorentz = optional_property_int(properties.get("n_lorentz"), 0)
@@ -38,7 +39,14 @@ class Deconvolver:
             file_name_with_extension = path_utils.basename(signal_file_abs_path)
             file_name_root, file_name_extension = path_utils.splitext(file_name_with_extension)
 
-            data = pandas.read_csv(signal_file_abs_path, delim_whitespace=True)
+            x = []
+            signal = []
+            if format == "txt":
+                data = pandas.read_csv(signal_file_abs_path, delim_whitespace=True)
+            elif format == "dpt":
+                data = pandas.read_csv(signal_file_abs_path, header=None, names=["#Wave", "#Intensity"])
+            else:
+                raise Exception("Unknown file format {f}".format(f=format))
 
             x = data["#Wave"].tolist()
             signal = data["#Intensity"].tolist()
