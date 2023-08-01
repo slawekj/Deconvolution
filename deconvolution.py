@@ -39,8 +39,6 @@ class Deconvolver:
             file_name_with_extension = path_utils.basename(signal_file_abs_path)
             file_name_root, file_name_extension = path_utils.splitext(file_name_with_extension)
 
-            x = []
-            signal = []
             if format == "txt":
                 data = pandas.read_csv(signal_file_abs_path, delim_whitespace=True)
             elif format == "dpt":
@@ -135,8 +133,10 @@ class Deconvolver:
             plt.plot(x, result.best_fit, '--', label='fit')
 
             fit_df = pd.DataFrame(list(zip(x, result.best_fit)), columns=["#Wave", "#Intensity"])
-            fit_df.to_csv(path_or_buf=path_utils.join(output_dir, file_name_root + ".fit.txt"),
-                          sep="\t", index=False)
+            fit_df.to_csv(path_or_buf=path_utils.join(output_dir, file_name_root + ".fit.{ex}".format(ex=format)),
+                          sep={"txt": "\t", "dpt": ","}[format],
+                          index=False,
+                          header={"txt": True, "dpt": False}[format])
 
             for i in range(n_gauss):
                 amp = result.best_values[f"gauss_peak{i + 1}_amplitude"]
@@ -149,8 +149,12 @@ class Deconvolver:
                          label=f"G{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
                          alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
-                peak_df.to_csv(path_or_buf=path_utils.join(output_dir, file_name_root + f".gauss_peak{i + 1}" + ".txt"),
-                               sep="\t", index=False)
+                peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
+                                                           file_name_root + ".gauss_peak{n}.{ex}".format(n=i + 1,
+                                                                                                         ex=format)),
+                               sep={"txt": "\t", "dpt": ","}[format],
+                               index=False,
+                               header={"txt": True, "dpt": False}[format])
                 peaks["#"].insert(peak_index, f"%_{peak_index + 1}")
                 peaks["PeakType"].insert(peak_index, "Gaussian")
                 peaks["Center"].insert(peak_index, center)
@@ -171,9 +175,12 @@ class Deconvolver:
                          label=f"L{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
                          alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
-                peak_df.to_csv(
-                    path_or_buf=path_utils.join(output_dir, file_name_root + f".lorentz_peak{i + 1}" + ".txt"),
-                    sep="\t", index=False)
+                peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
+                                                           file_name_root + ".lorentz_peak{n}.{ex}".format(n=i + 1,
+                                                                                                           ex=format)),
+                               sep={"txt": "\t", "dpt": ","}[format],
+                               index=False,
+                               header={"txt": True, "dpt": False}[format])
                 peaks["#"].insert(peak_index, f"%_{peak_index + 1}")
                 peaks["PeakType"].insert(peak_index, "Lorentzian")
                 peaks["Center"].insert(peak_index, center)
@@ -188,8 +195,11 @@ class Deconvolver:
                 y = [bkg_c for i in x]
                 plt.plot(x, y, '--', label=f"Background: {round(bkg_c, 2)}")
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
-                peak_df.to_csv(path_or_buf=path_utils.join(output_dir, file_name_root + ".background.txt"),
-                               sep="\t", index=False)
+                peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
+                                                           file_name_root + ".background.{ex}".format(ex=format)),
+                               sep={"txt": "\t", "dpt": ","}[format],
+                               index=False,
+                               header={"txt": True, "dpt": False}[format])
 
             plt.legend(loc="upper right")
             plt.figtext(0.1, 0.02, f"fitting method: {method}")
