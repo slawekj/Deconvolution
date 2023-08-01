@@ -12,7 +12,8 @@ import pandas
 
 
 class Deconvolver:
-    def deconvolve(self, signal_file_abs_path, experiment_label, properties):
+
+    def deconvolve_single_file(self, signal_file_abs_path, experiment_label, properties, all_peaks):
         try:
             input_format_separator = optional_property_str(properties.get("input_format_separator"), "\t")
             input_format_header = optional_property_bool(properties.get("input_format_header"), False)
@@ -123,7 +124,8 @@ class Deconvolver:
                 "Height": [],
                 "Area": [],
                 "FWHM": [],
-                "parameters...": []
+                "parameters...": [],
+                "File": []
             }
 
             matplotlib.use('SVG')
@@ -147,8 +149,8 @@ class Deconvolver:
                 fwhm = 2.3548200 * sigma
                 y = [lmfit.lineshapes.gaussian(i, amp, center, sigma) for i in x]
                 ax.fill(x, y,
-                         label=f"G{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
-                         alpha=0.1)
+                        label=f"G{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
+                        alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".gauss_peak{n}{ex}".format(n=i + 1,
@@ -163,6 +165,7 @@ class Deconvolver:
                 peaks["Area"].insert(peak_index, amp * sigma / 0.3989)
                 peaks["FWHM"].insert(peak_index, fwhm)
                 peaks["parameters..."].insert(peak_index, f"{height} {center} ?")
+                peaks["File"].insert(peak_index, file_name_root)
                 peak_index = peak_index + 1
 
             for i in range(n_lorentz):
@@ -173,8 +176,8 @@ class Deconvolver:
                 fwhm = 2.0 * sigma
                 y = [lmfit.lineshapes.lorentzian(i, amp, center, sigma) for i in x]
                 ax.fill(x, y,
-                         label=f"L{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
-                         alpha=0.1)
+                        label=f"L{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
+                        alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".lorentz_peak{n}{ex}".format(n=i + 1,
@@ -189,7 +192,17 @@ class Deconvolver:
                 peaks["Area"].insert(peak_index, np.pi)
                 peaks["FWHM"].insert(peak_index, fwhm)
                 peaks["parameters..."].insert(peak_index, f"{height} {center} ?")
+                peaks["File"].insert(peak_index, file_name_root)
                 peak_index = peak_index + 1
+
+            all_peaks["#"].extend(peaks["#"])
+            all_peaks["PeakType"].extend(peaks["PeakType"])
+            all_peaks["Center"].extend(peaks["Center"])
+            all_peaks["Height"].extend(peaks["Height"])
+            all_peaks["Area"].extend(peaks["Area"])
+            all_peaks["FWHM"].extend(peaks["FWHM"])
+            all_peaks["parameters..."].extend(peaks["parameters..."])
+            all_peaks["File"].extend(peaks["File"])
 
             if include_background:
                 bkg_c = result.best_values["bkg_c"]
@@ -204,10 +217,10 @@ class Deconvolver:
                                header=input_format_header)
 
             ax.legend(loc="upper center",
-                       bbox_to_anchor=(0.5, -0.05),
-                       fancybox=True,
-                       shadow=True,
-                       ncol=3)
+                      bbox_to_anchor=(0.5, -0.05),
+                      fancybox=True,
+                      shadow=True,
+                      ncol=3)
 
             plt.savefig(path_utils.join(output_dir, file_name_root + ".pdf"),
                         format="pdf",
