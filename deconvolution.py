@@ -162,7 +162,7 @@ class Deconvolver:
                 peaks["PeakType"].insert(peak_index, "Gaussian")
                 peaks["Center"].insert(peak_index, center)
                 peaks["Height"].insert(peak_index, height)
-                peaks["Area"].insert(peak_index, amp * sigma / 0.3989)
+                peaks["Area"].insert(peak_index, height * sigma / 0.3989)
                 peaks["FWHM"].insert(peak_index, fwhm)
                 peaks["parameters..."].insert(peak_index, f"{height} {center} ?")
                 peaks["File"].insert(peak_index, file_name_root)
