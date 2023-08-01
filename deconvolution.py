@@ -14,7 +14,8 @@ import pandas
 class Deconvolver:
     def deconvolve(self, signal_file_abs_path, experiment_label, properties):
         try:
-            format = optional_property_str(properties.get("format"), "txt")
+            input_format_separator = optional_property_str(properties.get("input_format_separator"), "\t")
+            input_format_header = optional_property_bool(properties.get("input_format_header"), False)
             method = optional_property_str(properties.get("method"), "differential_evolution")
             n_gauss = optional_property_int(properties.get("n_gauss"), 0)
             n_lorentz = optional_property_int(properties.get("n_lorentz"), 0)
@@ -39,12 +40,10 @@ class Deconvolver:
             file_name_with_extension = path_utils.basename(signal_file_abs_path)
             file_name_root, file_name_extension = path_utils.splitext(file_name_with_extension)
 
-            if format == "txt":
-                data = pandas.read_csv(signal_file_abs_path, delim_whitespace=True)
-            elif format == "dpt":
-                data = pandas.read_csv(signal_file_abs_path, header=None, names=["#Wave", "#Intensity"])
-            else:
-                raise Exception("Unknown file format {f}".format(f=format))
+            data = pandas.read_csv(filepath_or_buffer=signal_file_abs_path,
+                                   header={True: 0, False: None}[input_format_header],
+                                   names=["#Wave", "#Intensity"],
+                                   sep=input_format_separator)
 
             x = data["#Wave"].tolist()
             signal = data["#Intensity"].tolist()
@@ -133,10 +132,11 @@ class Deconvolver:
             plt.plot(x, result.best_fit, '--', label='fit')
 
             fit_df = pd.DataFrame(list(zip(x, result.best_fit)), columns=["#Wave", "#Intensity"])
-            fit_df.to_csv(path_or_buf=path_utils.join(output_dir, file_name_root + ".fit.{ex}".format(ex=format)),
-                          sep={"txt": "\t", "dpt": ","}[format],
-                          index=False,
-                          header={"txt": True, "dpt": False}[format])
+            fit_df.to_csv(
+                path_or_buf=path_utils.join(output_dir, file_name_root + ".fit{ex}".format(ex=file_name_extension)),
+                sep=input_format_separator,
+                index=False,
+                header=input_format_header)
 
             for i in range(n_gauss):
                 amp = result.best_values[f"gauss_peak{i + 1}_amplitude"]
@@ -150,11 +150,11 @@ class Deconvolver:
                          alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
-                                                           file_name_root + ".gauss_peak{n}.{ex}".format(n=i + 1,
-                                                                                                         ex=format)),
-                               sep={"txt": "\t", "dpt": ","}[format],
+                                                           file_name_root + ".gauss_peak{n}{ex}".format(n=i + 1,
+                                                                                                        ex=file_name_extension)),
+                               sep=input_format_separator,
                                index=False,
-                               header={"txt": True, "dpt": False}[format])
+                               header=input_format_header)
                 peaks["#"].insert(peak_index, f"%_{peak_index + 1}")
                 peaks["PeakType"].insert(peak_index, "Gaussian")
                 peaks["Center"].insert(peak_index, center)
@@ -176,11 +176,11 @@ class Deconvolver:
                          alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
-                                                           file_name_root + ".lorentz_peak{n}.{ex}".format(n=i + 1,
-                                                                                                           ex=format)),
-                               sep={"txt": "\t", "dpt": ","}[format],
+                                                           file_name_root + ".lorentz_peak{n}{ex}".format(n=i + 1,
+                                                                                                          ex=file_name_extension)),
+                               sep=input_format_separator,
                                index=False,
-                               header={"txt": True, "dpt": False}[format])
+                               header=input_format_header)
                 peaks["#"].insert(peak_index, f"%_{peak_index + 1}")
                 peaks["PeakType"].insert(peak_index, "Lorentzian")
                 peaks["Center"].insert(peak_index, center)
@@ -196,10 +196,11 @@ class Deconvolver:
                 plt.plot(x, y, '--', label=f"Background: {round(bkg_c, 2)}")
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
-                                                           file_name_root + ".background.{ex}".format(ex=format)),
-                               sep={"txt": "\t", "dpt": ","}[format],
+                                                           file_name_root + ".background{ex}".format(
+                                                               ex=file_name_extension)),
+                               sep=input_format_separator,
                                index=False,
-                               header={"txt": True, "dpt": False}[format])
+                               header=input_format_header)
 
             plt.legend(loc="upper right")
             plt.figtext(0.1, 0.02, f"fitting method: {method}")
