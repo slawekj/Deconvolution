@@ -128,8 +128,9 @@ class Deconvolver:
 
             matplotlib.use('SVG')
             plt.clf()
-            plt.plot(x, signal, label='signal')
-            plt.plot(x, result.best_fit, '--', label='fit')
+            ax = plt.subplot(111)
+            ax.plot(x, signal, label='signal')
+            ax.plot(x, result.best_fit, '--', label='fit')
 
             fit_df = pd.DataFrame(list(zip(x, result.best_fit)), columns=["#Wave", "#Intensity"])
             fit_df.to_csv(
@@ -145,7 +146,7 @@ class Deconvolver:
                 height = 0.3989423 * amp / max(1e-15, sigma)
                 fwhm = 2.3548200 * sigma
                 y = [lmfit.lineshapes.gaussian(i, amp, center, sigma) for i in x]
-                plt.fill(x, y,
+                ax.fill(x, y,
                          label=f"G{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
                          alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
@@ -171,7 +172,7 @@ class Deconvolver:
                 height = 0.3183099 * amp / max(1e-15, sigma)
                 fwhm = 2.0 * sigma
                 y = [lmfit.lineshapes.lorentzian(i, amp, center, sigma) for i in x]
-                plt.fill(x, y,
+                ax.fill(x, y,
                          label=f"L{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
                          alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
@@ -193,7 +194,7 @@ class Deconvolver:
             if include_background:
                 bkg_c = result.best_values["bkg_c"]
                 y = [bkg_c for i in x]
-                plt.plot(x, y, '--', label=f"Background: {round(bkg_c, 2)}")
+                ax.plot(x, y, '--', label=f"Background: {round(bkg_c, 2)}")
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".background{ex}".format(
@@ -202,9 +203,15 @@ class Deconvolver:
                                index=False,
                                header=input_format_header)
 
-            plt.legend(loc="upper right")
-            plt.figtext(0.1, 0.02, f"fitting method: {method}")
-            plt.savefig(path_utils.join(output_dir, file_name_root + ".pdf"), format="pdf")
+            ax.legend(loc="upper center",
+                       bbox_to_anchor=(0.5, -0.05),
+                       fancybox=True,
+                       shadow=True,
+                       ncol=3)
+
+            plt.savefig(path_utils.join(output_dir, file_name_root + ".pdf"),
+                        format="pdf",
+                        bbox_inches="tight")
             peaks_df = pd.DataFrame(peaks)
             peaks_df.to_csv(path_or_buf=path_utils.join(output_dir, file_name_root + ".final.peaks"),
                             sep="\t", index=False)
