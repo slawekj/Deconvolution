@@ -13,20 +13,7 @@ import pandas
 
 class Deconvolver:
 
-    def __init__(self):
-        self.peak_keys = ["#", "PeakType", "Center", "Height", "Area", "FWHM", "parameters...", "File"]
-        self.all_peaks = {}
-        for k in self.peak_keys:
-            self.all_peaks[k] = []
-        self.output_dir = None
-
-    def clear(self):
-        self.all_peaks.clear()
-        for k in self.peak_keys:
-            self.all_peaks[k] = []
-        self.output_dir = None
-
-    def deconvolve_single_file(self, signal_file_abs_path, experiment_label, properties):
+    def deconvolve_single_file(self, signal_file_abs_path, experiment_label, properties, peak_aggregator):
         try:
             input_format_separator = self.optional_property_str(properties.get("input_format_separator"), "\t")
             input_format_header = self.optional_property_bool(properties.get("input_format_header"), False)
@@ -125,15 +112,11 @@ class Deconvolver:
                 params=composite_params,
                 method=method)
 
-            self.output_dir = path_utils.join(file_directory, experiment_label)
-            if not path_utils.exists(self.output_dir):
-                os.mkdir(self.output_dir)
+            output_dir = path_utils.join(file_directory, experiment_label)
+            if not path_utils.exists(output_dir):
+                os.mkdir(output_dir)
 
             peak_index = 0
-            peaks = {}
-            for k in self.peak_keys:
-                peaks[k] = []
-
             matplotlib.use('SVG')
             plt.clf()
             ax = plt.subplot(111)
@@ -142,7 +125,7 @@ class Deconvolver:
 
             fit_df = pd.DataFrame(list(zip(x, result.best_fit)), columns=["#Wave", "#Intensity"])
             fit_df.to_csv(
-                path_or_buf=path_utils.join(self.output_dir,
+                path_or_buf=path_utils.join(output_dir,
                                             file_name_root + ".fit{ex}".format(ex=file_name_extension)),
                 sep=input_format_separator,
                 index=False,
@@ -159,20 +142,21 @@ class Deconvolver:
                         label=f"G{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
                         alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
-                peak_df.to_csv(path_or_buf=path_utils.join(self.output_dir,
+                peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".gauss_peak{n}{ex}".format(n=i + 1,
                                                                                                         ex=file_name_extension)),
                                sep=input_format_separator,
                                index=False,
                                header=input_format_header)
-                peaks["#"].insert(peak_index, f"%_{peak_index + 1}")
-                peaks["PeakType"].insert(peak_index, "Gaussian")
-                peaks["Center"].insert(peak_index, center)
-                peaks["Height"].insert(peak_index, height)
-                peaks["Area"].insert(peak_index, height * sigma / 0.3989)
-                peaks["FWHM"].insert(peak_index, fwhm)
-                peaks["parameters..."].insert(peak_index, f"{height} {center} ?")
-                peaks["File"].insert(peak_index, file_name_root)
+                peak_aggregator.add_peak(
+                    index=f"%_{peak_index + 1}",
+                    peak_type="Gaussian",
+                    center=center,
+                    height=height,
+                    area=height * sigma / 0.3989,
+                    fwhm=fwhm,
+                    parameters=f"{height} {center} ?",
+                    file=signal_file_abs_path)
                 peak_index = peak_index + 1
 
             for i in range(n_lorentz):
@@ -186,72 +170,51 @@ class Deconvolver:
                         label=f"L{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
                         alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
-                peak_df.to_csv(path_or_buf=path_utils.join(self.output_dir,
+                peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".lorentz_peak{n}{ex}".format(n=i + 1,
                                                                                                           ex=file_name_extension)),
                                sep=input_format_separator,
                                index=False,
                                header=input_format_header)
-                peaks["#"].insert(peak_index, f"%_{peak_index + 1}")
-                peaks["PeakType"].insert(peak_index, "Lorentzian")
-                peaks["Center"].insert(peak_index, center)
-                peaks["Height"].insert(peak_index, height)
-                peaks["Area"].insert(peak_index, np.pi)
-                peaks["FWHM"].insert(peak_index, fwhm)
-                peaks["parameters..."].insert(peak_index, f"{height} {center} ?")
-                peaks["File"].insert(peak_index, file_name_root)
+                peak_aggregator.add_peak(
+                    index=f"%_{peak_index + 1}",
+                    peak_type="Lorentzian",
+                    center=center,
+                    height=height,
+                    area=np.pi,
+                    fwhm=fwhm,
+                    parameters=f"{height} {center} ?",
+                    file=signal_file_abs_path)
                 peak_index = peak_index + 1
-
-            self.all_peaks["#"].extend(peaks["#"])
-            self.all_peaks["PeakType"].extend(peaks["PeakType"])
-            self.all_peaks["Center"].extend(peaks["Center"])
-            self.all_peaks["Height"].extend(peaks["Height"])
-            self.all_peaks["Area"].extend(peaks["Area"])
-            self.all_peaks["FWHM"].extend(peaks["FWHM"])
-            self.all_peaks["parameters..."].extend(peaks["parameters..."])
-            self.all_peaks["File"].extend(peaks["File"])
 
             if include_background:
                 bkg_c = result.best_values["bkg_c"]
                 y = [bkg_c for i in x]
                 ax.plot(x, y, '--', label=f"Background: {round(bkg_c, 2)}")
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
-                peak_df.to_csv(path_or_buf=path_utils.join(self.output_dir,
+                peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".background{ex}".format(
                                                                ex=file_name_extension)),
                                sep=input_format_separator,
                                index=False,
                                header=input_format_header)
-
             ax.legend(loc="upper center",
                       bbox_to_anchor=(0.5, -0.05),
                       fancybox=True,
                       shadow=True,
                       ncol=3)
-
-            plt.savefig(path_utils.join(self.output_dir, file_name_root + ".pdf"),
+            plt.savefig(path_utils.join(output_dir, file_name_root + ".pdf"),
                         format="pdf",
                         bbox_inches="tight")
-            peaks_df = pd.DataFrame(peaks)
-            peaks_df.to_csv(path_or_buf=path_utils.join(self.output_dir, file_name_root + ".final.peaks"),
-                            sep="\t", index=False)
-            with open(path_utils.join(self.output_dir, file_name_root + ".model.txt"), "w") as output:
+            with open(path_utils.join(output_dir, file_name_root + ".model.txt"), "w") as output:
                 output.writelines(result.fit_report())
-            with open(path_utils.join(self.output_dir, file_name_root + ".properties"), "w") as output:
+            with open(path_utils.join(output_dir, file_name_root + ".properties"), "w") as output:
                 for property in properties:
                     output.write(property + "=" + properties[property] + "\n")
             return 0
         except Exception:
             print(traceback.format_exc(), file=sys.stderr)
             return 1
-
-    def aggregate_peaks(self):
-        if self.output_dir is not None and "#" in self.all_peaks and len(self.all_peaks["#"]) > 0:
-            peaks_df = pd.DataFrame(self.all_peaks)
-            if not path_utils.exists(self.output_dir):
-                os.mkdir(self.output_dir)
-            peaks_df.to_csv(path_or_buf=path_utils.join(self.output_dir, "all.peaks"),
-                            sep="\t", index=False)
 
     @staticmethod
     def optional_property_str(prop, default):

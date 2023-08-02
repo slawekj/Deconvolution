@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import pathlib
 from deconvolution import Deconvolver
+from peak_aggregation import PeakAggregator
 from threading import Thread
 from tkinter import filedialog as fd
 from jproperties import Properties
@@ -35,16 +36,14 @@ class Gui(ctk.CTk):
 
         self.signal_files_textbox = ctk.CTkTextbox(master=self.signal_selection_frame, wrap="none")
         self.signal_files_textbox.pack(pady=12, padx=10, expand=True, fill="both")
-        with open(".files", "r") as file:
-            for line in file.readlines():
-                self.signal_files_textbox.insert(ctk.END, line)
+        self.load_files()
 
         self.select_file_button = ctk.CTkButton(master=self.signal_selection_frame, text="Select file(s)",
                                                 command=lambda: Thread(target=self.select_files).start())
         self.select_file_button.pack(pady=12, padx=10)
 
         self.clear_selection_button = ctk.CTkButton(master=self.signal_selection_frame, text="Clear selection",
-                                                    command=lambda: Thread(target=self.clear_selection).start())
+                                                    command=lambda: Thread(target=self.clear_files).start())
         self.clear_selection_button.pack(pady=12, padx=10)
 
         self.model_selection_label = ctk.CTkLabel(master=self.model_selection_frame, text="Fitting model:")
@@ -52,9 +51,7 @@ class Gui(ctk.CTk):
 
         self.model_selection_textbox = ctk.CTkTextbox(master=self.model_selection_frame, wrap="none")
         self.model_selection_textbox.pack(pady=12, padx=10, expand=True, fill="both")
-        with open(".properties", "r") as file:
-            for line in file.readlines():
-                self.model_selection_textbox.insert(ctk.END, line)
+        self.load_properties()
 
         self.model_save_button = ctk.CTkButton(master=self.model_selection_frame, text="Save",
                                                command=lambda: Thread(target=self.save_properties).start())
@@ -77,27 +74,62 @@ class Gui(ctk.CTk):
 
         self.deconvolver = Deconvolver()
 
+    def load_properties(self):
+        with open(".properties", "r") as file:
+            for line in file.readlines():
+                self.model_selection_textbox.insert(ctk.END, line)
+
     def save_properties(self):
         with open(".properties", "w") as file:
             file.write(self.model_selection_textbox.get("1.0", ctk.END).strip())
 
-    def on_closing(self):
-        self.save_properties()
-        with open(".files", "w") as file:
-            file.write(self.signal_files_textbox.get("1.0", ctk.END).strip())
-        self.destroy()
+    def load_files(self):
+        with open(".files", "r") as file:
+            for line in file.readlines():
+                self.signal_files_textbox.insert(ctk.END, line)
 
-    def clear_selection(self):
+    def clear_files(self):
         self.signal_files_textbox.delete(1.0, ctk.END)
 
-    def go(self):
+    def save_files(self):
+        with open(".files", "w") as file:
+            file.write(self.signal_files_textbox.get("1.0", ctk.END).strip())
+
+    def select_files(self):
+        filetypes = (
+            ('Text files', '*.dpt'),
+            ('Text files', '*.txt'),
+            ('All files', '*.*')
+        )
+        filenames = fd.askopenfilenames(
+            title='Open file(s)',
+            initialdir=pathlib.Path.home(),
+            filetypes=filetypes)
+        self.signal_files_textbox.delete("1.0", ctk.END)
+        for filename in filenames:
+            self.signal_files_textbox.insert(ctk.END, filename + "\n")
+
+    def extract_file_names(self):
         filenames = []
         for line in self.signal_files_textbox.get("1.0", ctk.END).split("\n"):
             stripped_line = line.strip()
             if len(stripped_line) > 0:
                 filenames.append(stripped_line)
+        return filenames
+
+    def extract_properties(self):
         properties = Properties()
         properties.load(self.model_selection_textbox.get("1.0", ctk.END))
+        return properties.properties
+
+    def on_closing(self):
+        self.save_properties()
+        self.save_files()
+        self.destroy()
+
+    def go(self):
+        filenames = self.extract_file_names()
+        properties = self.extract_properties()
         experiment_label = datetime.now().strftime("experiment_%m_%d_%Y__%H_%M_%S")
         if len(filenames) > 0:
             self.progress_label.configure(text="Progress: 0.00%")
@@ -105,20 +137,21 @@ class Gui(ctk.CTk):
             self.progress_textbox.delete(1.0, ctk.END)
             self.progress_textbox.insert(ctk.END, "{ts}: start\n".format(
                 ts=datetime.now().strftime("%H:%M:%S")))
-            self.deconvolver.clear()
+            peak_aggregator = PeakAggregator()
             for i in range(len(filenames)):
                 filename = filenames[i]
                 deconvolution_status = self.deconvolver.deconvolve_single_file(
                     signal_file_abs_path=filename,
                     experiment_label=experiment_label,
-                    properties=properties.properties)
+                    properties=properties,
+                    peak_aggregator=peak_aggregator)
                 self.progress_textbox.insert(ctk.END, "{ts}: {status} {filename}\n".format(
                     ts=datetime.now().strftime("%H:%M:%S"),
                     status={True: "OK", False: "ERROR"}[deconvolution_status == 0],
                     filename=filename
                 ))
                 self.progress_label.configure(text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
-            self.deconvolver.aggregate_peaks()
+            peak_aggregator.save_peaks_to_file(experiment_label)
             self.progress_bar.stop()
             self.progress_textbox.insert(ctk.END, "{ts}: finished\n".format(
                 ts=datetime.now().strftime("%H:%M:%S")
@@ -128,19 +161,3 @@ class Gui(ctk.CTk):
             self.progress_bar.set(0.0)
             self.progress_textbox.delete(1.0, ctk.END)
             self.progress_textbox.insert(ctk.END, "no signal file(s) selected")
-
-    def select_files(self):
-        filetypes = (
-            ('Text files', '*.dpt'),
-            ('Text files', '*.txt'),
-            ('All files', '*.*')
-        )
-
-        filenames = fd.askopenfilenames(
-            title='Open file(s)',
-            initialdir=pathlib.Path.home(),
-            filetypes=filetypes)
-
-        self.signal_files_textbox.delete("1.0", ctk.END)
-        for filename in filenames:
-            self.signal_files_textbox.insert(ctk.END, filename + "\n")
