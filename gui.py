@@ -1,8 +1,5 @@
 import customtkinter as ctk
 import pathlib
-import pandas as pd
-import os
-import os.path as path_utils
 from deconvolution import Deconvolver
 from threading import Thread
 from tkinter import filedialog as fd
@@ -108,36 +105,20 @@ class Gui(ctk.CTk):
             self.progress_textbox.delete(1.0, ctk.END)
             self.progress_textbox.insert(ctk.END, "{ts}: start\n".format(
                 ts=datetime.now().strftime("%H:%M:%S")))
-            peaks = {
-                "#": [],
-                "PeakType": [],
-                "Center": [],
-                "Height": [],
-                "Area": [],
-                "FWHM": [],
-                "parameters...": [],
-                "File": []
-            }
+            self.deconvolver.clear()
             for i in range(len(filenames)):
                 filename = filenames[i]
                 deconvolution_status = self.deconvolver.deconvolve_single_file(
                     signal_file_abs_path=filename,
                     experiment_label=experiment_label,
-                    properties=properties.properties,
-                    all_peaks=peaks)
+                    properties=properties.properties)
                 self.progress_textbox.insert(ctk.END, "{ts}: {status} {filename}\n".format(
                     ts=datetime.now().strftime("%H:%M:%S"),
                     status={True: "OK", False: "ERROR"}[deconvolution_status == 0],
                     filename=filename
                 ))
                 self.progress_label.configure(text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
-            peaks_df = pd.DataFrame(peaks)
-            file_directory = path_utils.dirname(filenames[0])
-            output_dir = path_utils.join(file_directory, experiment_label)
-            if not path_utils.exists(output_dir):
-                os.mkdir(output_dir)
-            peaks_df.to_csv(path_or_buf=path_utils.join(output_dir, "all.peaks"),
-                            sep="\t", index=False)
+            self.deconvolver.aggregate_peaks()
             self.progress_bar.stop()
             self.progress_textbox.insert(ctk.END, "{ts}: finished\n".format(
                 ts=datetime.now().strftime("%H:%M:%S")
