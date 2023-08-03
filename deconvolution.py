@@ -13,7 +13,7 @@ import pandas
 
 class Deconvolver:
 
-    def deconvolve_single_file(self, signal_file_abs_path, experiment_label, properties, peak_aggregator):
+    def deconvolve_single_file(self, signal_file_abs_path, experiment_label, properties):
         try:
             input_format_separator = self.optional_property_str(properties.get("input_format_separator"), "\t")
             input_format_header = self.optional_property_bool(properties.get("input_format_header"), False)
@@ -116,7 +116,7 @@ class Deconvolver:
                 sep=input_format_separator,
                 index=False,
                 header=input_format_header)
-
+            peaks = self.init_peaks()
             for i in range(n_gauss):
                 amp = result.best_values[f"gauss_peak{i + 1}_amplitude"]
                 center = result.best_values[f"gauss_peak{i + 1}_center"]
@@ -134,7 +134,8 @@ class Deconvolver:
                                sep=input_format_separator,
                                index=False,
                                header=input_format_header)
-                peak_aggregator.add_peak(
+                self.add_peak(
+                    peaks=peaks,
                     index=f"%_{peak_index + 1}",
                     peak_type="Gaussian",
                     center=center,
@@ -162,7 +163,8 @@ class Deconvolver:
                                sep=input_format_separator,
                                index=False,
                                header=input_format_header)
-                peak_aggregator.add_peak(
+                self.add_peak(
+                    peaks=peaks,
                     index=f"%_{peak_index + 1}",
                     peak_type="Lorentzian",
                     center=center,
@@ -197,6 +199,13 @@ class Deconvolver:
             with open(path_utils.join(output_dir, file_name_root + ".properties"), "w") as output:
                 for property in properties:
                     output.write(property + "=" + properties[property] + "\n")
+            peaks_df = pd.DataFrame(peaks)
+            peaks_df.to_csv(path_or_buf=path_utils.join(output_dir, file_name_root + ".peaks"), sep="\t", index=False)
+            aggregate_peaks_file = path_utils.join(output_dir, "all.peaks")
+            if path_utils.exists(aggregate_peaks_file):
+                peaks_df.to_csv(path_or_buf=aggregate_peaks_file, sep="\t", index=False, mode="a", header=False)
+            else:
+                peaks_df.to_csv(path_or_buf=aggregate_peaks_file, sep="\t", index=False, mode="a", header=True)
             return 0
         except Exception:
             print(traceback.format_exc(), file=sys.stderr)
@@ -220,6 +229,32 @@ class Deconvolver:
         if properties.get(parameter_name + "_vary"):
             limits["vary"] = self.optional_property_bool(properties.get(parameter_name + "_vary"), True)
         return limits
+
+    @staticmethod
+    def init_peaks():
+        peaks = {
+            "#": [],
+            "PeakType": [],
+            "Center": [],
+            "Height": [],
+            "Area": [],
+            "FWHM": [],
+            "parameters...": [],
+            "File": []
+        }
+        return peaks
+
+    @staticmethod
+    def add_peak(peaks, index, peak_type, center, height, area, fwhm, parameters, file):
+        current_index = len(peaks["#"])
+        peaks["#"].insert(current_index, index)
+        peaks["PeakType"].insert(current_index, peak_type)
+        peaks["Center"].insert(current_index, center)
+        peaks["Height"].insert(current_index, height)
+        peaks["Area"].insert(current_index, area)
+        peaks["FWHM"].insert(current_index, fwhm)
+        peaks["parameters..."].insert(current_index, parameters)
+        peaks["File"].insert(current_index, file)
 
     @staticmethod
     def optional_property_str(prop, default):

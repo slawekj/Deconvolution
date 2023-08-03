@@ -1,7 +1,6 @@
 import customtkinter as ctk
 import pathlib
 from deconvolution import Deconvolver
-from peak_aggregation import PeakAggregator
 from threading import Thread
 from tkinter import filedialog as fd
 from jproperties import Properties
@@ -137,21 +136,18 @@ class Gui(ctk.CTk):
             self.progress_textbox.delete(1.0, ctk.END)
             self.progress_textbox.insert(ctk.END, "{ts}: start\n".format(
                 ts=datetime.now().strftime("%H:%M:%S")))
-            peak_aggregator = PeakAggregator()
             for i in range(len(filenames)):
                 filename = filenames[i]
                 deconvolution_status = self.deconvolver.deconvolve_single_file(
                     signal_file_abs_path=filename,
                     experiment_label=experiment_label,
-                    properties=properties,
-                    peak_aggregator=peak_aggregator)
+                    properties=properties)
                 self.progress_textbox.insert(ctk.END, "{ts}: {status} {filename}\n".format(
                     ts=datetime.now().strftime("%H:%M:%S"),
                     status={True: "OK", False: "ERROR"}[deconvolution_status == 0],
                     filename=filename
                 ))
                 self.progress_label.configure(text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
-            peak_aggregator.save_peaks_to_file(experiment_label)
             self.progress_bar.stop()
             self.progress_textbox.insert(ctk.END, "{ts}: finished\n".format(
                 ts=datetime.now().strftime("%H:%M:%S")
