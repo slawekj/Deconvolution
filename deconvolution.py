@@ -31,8 +31,13 @@ class Deconvolver:
             lorentz_peak_amp_max_default = self.optional_property_float(
                 properties.get("lorentz_peak_amp_max_default"),
                 100.0)
+            gauss_peak_sigma_min_default = self.optional_property_float(
+                properties.get("gauss_peak_sigma_min_default"), 0.0)
             gauss_peak_sigma_max_default = self.optional_property_float(
                 properties.get("gauss_peak_sigma_max_default"), 100.0)
+            lorentz_peak_sigma_min_default = self.optional_property_float(
+                properties.get("lorentz_peak_sigma_min_default"),
+                0.0)
             lorentz_peak_sigma_max_default = self.optional_property_float(
                 properties.get("lorentz_peak_sigma_max_default"),
                 100.0)
@@ -67,42 +72,23 @@ class Deconvolver:
             for i in range(n_gauss):
                 new_model = GaussianModel(prefix=f"gauss_peak{i + 1}_")
                 new_params = new_model.make_params(
-                    amplitude=dict(
-                        min=self.optional_property_float(properties.get(f"gauss_peak{i + 1}_amp_min"),
-                                                         gauss_peak_amp_min_default),
-                        max=self.optional_property_float(properties.get(f"gauss_peak{i + 1}_amp_max"),
-                                                         gauss_peak_amp_max_default),
-                        value=0.0),
-                    center=dict(
-                        min=self.optional_property_float(properties.get(f"gauss_peak{i + 1}_mu_min"), signal_min_x),
-                        max=self.optional_property_float(properties.get(f"gauss_peak{i + 1}_mu_max"), signal_max_x),
-                        value=signal_min_x),
-                    sigma=dict(
-                        min=self.optional_property_float(properties.get(f"gauss_peak{i + 1}_sigma_min"), 0.0),
-                        max=self.optional_property_float(properties.get(f"gauss_peak{i + 1}_sigma_max"),
-                                                         gauss_peak_sigma_max_default),
-                        value=0.0))
+                    amplitude=self.determine_limits(properties, f"gauss_peak{i + 1}_amp", gauss_peak_amp_min_default,
+                                                    gauss_peak_amp_max_default),
+                    center=self.determine_limits(properties, f"gauss_peak{i + 1}_mu", signal_min_x, signal_max_x),
+                    sigma=self.determine_limits(properties, f"gauss_peak{i + 1}_sigma", gauss_peak_sigma_min_default,
+                                                gauss_peak_sigma_max_default))
                 composite_params.update(new_params)
                 composite_model = composite_model + new_model
 
             for i in range(n_lorentz):
                 new_model = LorentzianModel(prefix=f"lorentz_peak{i + 1}_")
                 new_params = new_model.make_params(
-                    amplitude=dict(
-                        min=self.optional_property_float(properties.get(f"lorentz_peak{i + 1}_amp_min"),
-                                                         lorentz_peak_amp_min_default),
-                        max=self.optional_property_float(properties.get(f"lorentz_peak{i + 1}_amp_max"),
-                                                         lorentz_peak_amp_max_default),
-                        value=0.0),
-                    center=dict(
-                        min=self.optional_property_float(properties.get(f"lorentz_peak{i + 1}_mu_min"), signal_min_x),
-                        max=self.optional_property_float(properties.get(f"lorentz_peak{i + 1}_mu_max"), signal_max_x),
-                        value=signal_min_x),
-                    sigma=dict(
-                        min=self.optional_property_float(properties.get(f"lorentz_peak{i + 1}_sigma_min"), 0.0),
-                        max=self.optional_property_float(properties.get(f"lorentz_peak{i + 1}_sigma_max"),
-                                                         lorentz_peak_sigma_max_default),
-                        value=0.0))
+                    amplitude=self.determine_limits(properties, f"lorentz_peak{i + 1}_amp",
+                                                    lorentz_peak_amp_min_default, lorentz_peak_amp_max_default),
+                    center=self.determine_limits(properties, f"lorentz_peak{i + 1}_mu", signal_min_x, signal_max_x),
+                    sigma=self.determine_limits(properties, f"lorentz_peak{i + 1}_sigma",
+                                                lorentz_peak_sigma_min_default,
+                                                lorentz_peak_sigma_max_default))
                 composite_params.update(new_params)
                 composite_model = composite_model + new_model
 
@@ -215,6 +201,25 @@ class Deconvolver:
         except Exception:
             print(traceback.format_exc(), file=sys.stderr)
             return 1
+
+    def determine_limits(self, properties, parameter_name, parameter_default_min, parameter_default_max):
+        limits = dict()
+        if properties.get(parameter_name + "_min"):
+            limits["min"] = self.optional_property_float(properties.get(parameter_name + "_min"), parameter_default_min)
+        else:
+            limits["min"] = parameter_default_min
+        if properties.get(parameter_name + "_max"):
+            limits["max"] = self.optional_property_float(properties.get(parameter_name + "_max"), parameter_default_max)
+        else:
+            limits["max"] = parameter_default_max
+        if properties.get(parameter_name + "_value"):
+            limits["value"] = self.optional_property_float(properties.get(parameter_name + "_value"),
+                                                           parameter_default_min)
+        else:
+            limits["value"] = parameter_default_min
+        if properties.get(parameter_name + "_vary"):
+            limits["vary"] = self.optional_property_bool(properties.get(parameter_name + "_vary"), True)
+        return limits
 
     @staticmethod
     def optional_property_str(prop, default):
