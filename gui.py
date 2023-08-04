@@ -144,9 +144,11 @@ class Gui(ctk.CTk):
                     properties=properties)
                 self.progress_textbox.insert(ctk.END, "{ts}: {status} {filename}\n".format(
                     ts=datetime.now().strftime("%H:%M:%S"),
-                    status={True: "OK", False: "ERROR"}[deconvolution_status == 0],
+                    status={True: "OK", False: "ERROR"}[deconvolution_status.get("exit_code") == 0],
                     filename=filename
                 ))
+                if deconvolution_status.get("exit_code") != 0:
+                    self.progress_textbox.insert(ctk.END, deconvolution_status.get("stacktrace"))
                 self.progress_label.configure(text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
             self.progress_bar.stop()
             self.progress_textbox.insert(ctk.END, "{ts}: finished\n".format(
