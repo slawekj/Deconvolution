@@ -9,7 +9,6 @@ from lmfit.models import ConstantModel, GaussianModel, LorentzianModel
 import os
 import os.path as path_utils
 import pandas
-import io
 
 
 class Deconvolver:
