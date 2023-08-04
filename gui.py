@@ -136,6 +136,9 @@ class Gui(ctk.CTk):
             self.progress_textbox.delete(1.0, ctk.END)
             self.progress_textbox.insert(ctk.END, "{ts}: start\n".format(
                 ts=datetime.now().strftime("%H:%M:%S")))
+            self.progress_textbox.insert(ctk.END, "{ts}: {exp}\n".format(
+                ts=datetime.now().strftime("%H:%M:%S"),
+                exp=experiment_label))
             for i in range(len(filenames)):
                 filename = filenames[i]
                 deconvolution_status = self.deconvolver.deconvolve_single_file(
@@ -150,10 +153,10 @@ class Gui(ctk.CTk):
                 if deconvolution_status.get("exit_code") != 0:
                     self.progress_textbox.insert(ctk.END, deconvolution_status.get("stacktrace"))
                 self.progress_label.configure(text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
-            self.progress_bar.stop()
             self.progress_textbox.insert(ctk.END, "{ts}: finished\n".format(
                 ts=datetime.now().strftime("%H:%M:%S")
             ))
+            self.progress_bar.stop()
         else:
             self.progress_label.configure(text="Progress:")
             self.progress_bar.set(0.0)
