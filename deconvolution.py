@@ -195,9 +195,6 @@ class Deconvolver:
                         bbox_inches="tight")
             with open(path_utils.join(output_dir, file_name_root + ".model.txt"), "w") as output:
                 output.writelines(result.fit_report())
-            with open(path_utils.join(output_dir, file_name_root + ".properties"), "w") as output:
-                for property in properties:
-                    output.write(property + "=" + properties[property] + "\n")
             peaks_df = pd.DataFrame(peaks)
             peaks_df.to_csv(path_or_buf=path_utils.join(output_dir, file_name_root + ".peaks"), sep="\t", index=False)
             aggregate_peaks_file = path_utils.join(output_dir, "all.peaks")
@@ -206,23 +203,31 @@ class Deconvolver:
             else:
                 peaks_df.to_csv(path_or_buf=aggregate_peaks_file, sep="\t", index=False, header=True)
             output = {
-                "exit_code": 0
+                "exit_code": 0,
+                "output_dir": output_dir
             }
             return output
-        except Exception:
+        except Exception as e:
             print(traceback.format_exc(), file=sys.stderr)
+            error_log_path = path_utils.join(output_dir, "error.log")
             if output_dir is not None:
                 print("ERROR. Error processing {label}, file: {file}, with properties: {properties}".format(
                     label=experiment_label,
                     file=signal_file_abs_path,
                     properties=properties),
                     file=open(path_utils.join(output_dir, "error.log"), "a"))
-                print(traceback.format_exc(), file=open(path_utils.join(output_dir, "error.log"), "a"))
+                print(traceback.format_exc(), file=open(error_log_path, "a"))
             output = {
                 "exit_code": 1,
-                "stacktrace": traceback.format_exc()
+                "output_dir": output_dir,
+                "stacktrace": "{message}, see more details: {error_log}\n".format(message=str(e),
+                                                                                  error_log=error_log_path)
             }
             return output
+        finally:
+            with open(path_utils.join(output_dir, "experiment.properties"), "w") as output:
+                for p in properties:
+                    output.write(p + "=" + properties[p] + "\n")
 
     def determine_limits(self, properties, parameter_name, parameter_default_min, parameter_default_max):
         limits = dict()
