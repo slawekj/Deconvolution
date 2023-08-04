@@ -14,13 +14,7 @@ import pandas
 class Deconvolver:
 
     def deconvolve_single_file(self, signal_file_abs_path, experiment_label, properties):
-        file_directory = path_utils.dirname(signal_file_abs_path)
-        file_name_with_extension = path_utils.basename(signal_file_abs_path)
-        file_name_root, file_name_extension = path_utils.splitext(file_name_with_extension)
-        output_dir = path_utils.join(file_directory, experiment_label)
-        if not path_utils.exists(output_dir):
-            os.mkdir(output_dir)
-
+        output_dir = None
         try:
             input_format_separator = self.optional_property_str(properties.get("input_format_separator"), "\t")
             input_format_header = self.optional_property_bool(properties.get("input_format_header"), False)
@@ -48,6 +42,12 @@ class Deconvolver:
             lorentz_peak_sigma_max_default = self.optional_property_float(
                 properties.get("lorentz_peak_sigma_max_default"),
                 100.0)
+
+            file_directory = path_utils.dirname(signal_file_abs_path)
+            file_name_with_extension = path_utils.basename(signal_file_abs_path)
+            file_name_root, file_name_extension = path_utils.splitext(file_name_with_extension)
+            output_dir = path_utils.join(file_directory, experiment_label)
+            path_utils.exists(output_dir) or os.mkdir(output_dir)
 
             data = pandas.read_csv(filepath_or_buffer=signal_file_abs_path,
                                    header={True: 0, False: None}[input_format_header],
@@ -211,7 +211,8 @@ class Deconvolver:
             return output
         except Exception:
             print(traceback.format_exc(), file=sys.stderr)
-            print(traceback.format_exc(), file=open(path_utils.join(output_dir, "error.log"), "w"))
+            if output_dir is not None:
+                print(traceback.format_exc(), file=open(path_utils.join(output_dir, "error.log"), "w"))
             output = {
                 "exit_code": 1,
                 "stacktrace": traceback.format_exc()
