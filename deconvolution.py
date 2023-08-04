@@ -212,7 +212,12 @@ class Deconvolver:
         except Exception:
             print(traceback.format_exc(), file=sys.stderr)
             if output_dir is not None:
-                print(traceback.format_exc(), file=open(path_utils.join(output_dir, "error.log"), "w"))
+                print("ERROR. Error processing {label}, file: {file}, with properties: {properties}".format(
+                    label=experiment_label,
+                    file=signal_file_abs_path,
+                    properties=properties),
+                    file=open(path_utils.join(output_dir, "error.log"), "a"))
+                print(traceback.format_exc(), file=open(path_utils.join(output_dir, "error.log"), "a"))
             output = {
                 "exit_code": 1,
                 "stacktrace": traceback.format_exc()
