@@ -176,7 +176,7 @@ class Deconvolver:
 
             if include_background:
                 bkg_c = result.best_values["bkg_c"]
-                y = [bkg_c for i in x]
+                y = [bkg_c for _ in x]
                 ax.plot(x, y, '--', label=f"Background: {round(bkg_c, 2)}")
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
