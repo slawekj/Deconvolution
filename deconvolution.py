@@ -16,8 +16,10 @@ class Deconvolver:
     def deconvolve_single_file(self, signal_file_abs_path, experiment_label, properties):
         output_dir = None
         try:
-            input_format_separator = self.optional_property_str(properties.get("input_format_separator"), "\t")
+            input_format_separator = self.optional_property_str(properties.get("input_format_separator"), "\t+")
+            output_format_separator = self.optional_property_str(properties.get("output_format_separator"), "\t")
             input_format_header = self.optional_property_bool(properties.get("input_format_header"), False)
+            output_format_header = self.optional_property_bool(properties.get("output_format_header"), False)
             method = self.optional_property_str(properties.get("method"), "differential_evolution")
             n_gauss = self.optional_property_int(properties.get("n_gauss"), 0)
             n_lorentz = self.optional_property_int(properties.get("n_lorentz"), 0)
@@ -52,7 +54,8 @@ class Deconvolver:
             data = pandas.read_csv(filepath_or_buffer=signal_file_abs_path,
                                    header={True: 0, False: None}[input_format_header],
                                    names=["#Wave", "#Intensity"],
-                                   sep=input_format_separator)
+                                   sep=input_format_separator,
+                                   engine="python")
 
             x = data["#Wave"].tolist()
             signal = data["#Intensity"].tolist()
@@ -112,7 +115,7 @@ class Deconvolver:
             fit_df.to_csv(
                 path_or_buf=path_utils.join(output_dir,
                                             file_name_root + ".fit{ex}".format(ex=file_name_extension)),
-                sep=input_format_separator,
+                sep=output_format_separator,
                 index=False,
                 header=input_format_header)
             peaks = self.init_peaks()
@@ -130,7 +133,7 @@ class Deconvolver:
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".gauss_peak{n}{ex}".format(n=i + 1,
                                                                                                         ex=file_name_extension)),
-                               sep=input_format_separator,
+                               sep=output_format_separator,
                                index=False,
                                header=input_format_header)
                 self.add_peak(
@@ -159,7 +162,7 @@ class Deconvolver:
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".lorentz_peak{n}{ex}".format(n=i + 1,
                                                                                                           ex=file_name_extension)),
-                               sep=input_format_separator,
+                               sep=output_format_separator,
                                index=False,
                                header=input_format_header)
                 self.add_peak(
@@ -182,7 +185,7 @@ class Deconvolver:
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".background{ex}".format(
                                                                ex=file_name_extension)),
-                               sep=input_format_separator,
+                               sep=output_format_separator,
                                index=False,
                                header=input_format_header)
             ax.legend(loc="upper center",
@@ -196,12 +199,14 @@ class Deconvolver:
             with open(path_utils.join(output_dir, file_name_root + ".model.txt"), "w") as output:
                 output.writelines(result.fit_report())
             peaks_df = pd.DataFrame(peaks)
-            peaks_df.to_csv(path_or_buf=path_utils.join(output_dir, file_name_root + ".peaks"), sep="\t", index=False)
+            peaks_df.to_csv(path_or_buf=path_utils.join(output_dir, file_name_root + ".peaks"),
+                            sep=output_format_separator, index=False)
             aggregate_peaks_file = path_utils.join(output_dir, "all.peaks")
             if path_utils.exists(aggregate_peaks_file):
-                peaks_df.to_csv(path_or_buf=aggregate_peaks_file, sep="\t", index=False, mode="a", header=False)
+                peaks_df.to_csv(path_or_buf=aggregate_peaks_file, sep=output_format_separator, index=False, mode="a",
+                                header=False)
             else:
-                peaks_df.to_csv(path_or_buf=aggregate_peaks_file, sep="\t", index=False, header=True)
+                peaks_df.to_csv(path_or_buf=aggregate_peaks_file, sep=output_format_separator, index=False, header=True)
             output = {
                 "exit_code": 0,
                 "output_dir": output_dir
