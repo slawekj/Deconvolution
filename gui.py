@@ -33,7 +33,8 @@ class Gui(ctk.CTk):
         self.model_selection_label = ctk.CTkLabel(master=self.signal_selection_frame, text="Signal file(s):")
         self.model_selection_label.pack(pady=12, padx=10)
 
-        self.signal_files_textbox = ctk.CTkTextbox(master=self.signal_selection_frame, wrap="none")
+        self.signal_files_textbox = ctk.CTkTextbox(master=self.signal_selection_frame, wrap="none",
+                                                   font=ctk.CTkFont(family="Courier"))
         self.signal_files_textbox.pack(pady=12, padx=10, expand=True, fill="both")
         self.load_files()
 
@@ -48,7 +49,8 @@ class Gui(ctk.CTk):
         self.model_selection_label = ctk.CTkLabel(master=self.model_selection_frame, text="Fitting model:")
         self.model_selection_label.pack(pady=12, padx=10)
 
-        self.model_selection_textbox = ctk.CTkTextbox(master=self.model_selection_frame, wrap="none")
+        self.model_selection_textbox = ctk.CTkTextbox(master=self.model_selection_frame, wrap="none",
+                                                      font=ctk.CTkFont(family="Courier"))
         self.model_selection_textbox.pack(pady=12, padx=10, expand=True, fill="both")
         self.load_properties()
 
@@ -64,14 +66,20 @@ class Gui(ctk.CTk):
         self.progress_bar.pack(pady=12, padx=10)
         self.progress_bar.set(0.0)
 
-        self.progress_textbox = ctk.CTkTextbox(master=self.progress_frame, wrap="none")
+        self.progress_textbox = ctk.CTkTextbox(master=self.progress_frame, wrap="none",
+                                               font=ctk.CTkFont(family="Courier"))
         self.progress_textbox.pack(pady=12, padx=10, expand=True, fill="both")
 
-        self.go_button = ctk.CTkButton(master=self.progress_frame, text="Go!",
-                                       command=lambda: Thread(target=self.go).start())
-        self.go_button.pack(pady=12, padx=10)
+        self.start_button = ctk.CTkButton(master=self.progress_frame, text="start",
+                                          command=lambda: Thread(target=self.start).start())
+        self.start_button.pack(pady=12, padx=10)
+
+        self.stop_button = ctk.CTkButton(master=self.progress_frame, text="stop",
+                                         command=lambda: Thread(target=self.stop).start())
+        self.stop_button.pack(pady=12, padx=10)
 
         self.deconvolver = Deconvolver()
+        self.running_experiment = None
 
     def load_properties(self):
         with open(".properties", "r") as file:
@@ -126,39 +134,60 @@ class Gui(ctk.CTk):
         self.save_files()
         self.destroy()
 
-    def go(self):
+    def reset_experiment(self):
+        self.progress_label.configure(text="Progress: 0.00%")
+        self.progress_bar.stop()
+        self.progress_bar.set(0.0)
+        self.progress_textbox.delete(1.0, ctk.END)
+        self.running_experiment = None
+
+    def start(self):
+        if self.running_experiment is not None:
+            return
+        experiment_label = datetime.now().strftime("experiment_%m_%d_%Y__%H_%M_%S")
+        self.reset_experiment()
+        self.running_experiment = experiment_label
         filenames = self.extract_file_names()
         properties = self.extract_properties()
-        experiment_label = datetime.now().strftime("experiment_%m_%d_%Y__%H_%M_%S")
         if len(filenames) > 0:
-            self.progress_label.configure(text="Progress: 0.00%")
             self.progress_bar.start()
-            self.progress_textbox.delete(1.0, ctk.END)
-            self.progress_textbox.insert(ctk.END, "{ts}: start\n".format(
-                ts=datetime.now().strftime("%H:%M:%S")))
-            self.progress_textbox.insert(ctk.END, "{ts}: {exp}\n".format(
+            self.progress_textbox.insert(ctk.END, "[{ts}] {exp} started\n".format(
                 ts=datetime.now().strftime("%H:%M:%S"),
                 exp=experiment_label))
             for i in range(len(filenames)):
+                if experiment_label != self.running_experiment:
+                    break
                 filename = filenames[i]
                 deconvolution_status = self.deconvolver.deconvolve_single_file(
                     signal_file_abs_path=filename,
                     experiment_label=experiment_label,
                     properties=properties)
-                self.progress_textbox.insert(ctk.END, "{ts}: {status} {filename}\n".format(
-                    ts=datetime.now().strftime("%H:%M:%S"),
-                    status={True: "OK", False: "ERROR"}[deconvolution_status.get("exit_code") == 0],
-                    filename=filename
+                if experiment_label == self.running_experiment:
+                    self.progress_textbox.insert(ctk.END, "[{ts}] {status} {filename}\n".format(
+                        ts=datetime.now().strftime("%H:%M:%S"),
+                        status={True: "OK", False: "ERROR"}[deconvolution_status.get("exit_code") == 0],
+                        filename=filename
+                    ))
+                    if deconvolution_status.get("exit_code") != 0:
+                        self.progress_textbox.insert(ctk.END, deconvolution_status.get("stacktrace"))
+                    self.progress_label.configure(text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
+            if experiment_label == self.running_experiment:
+                self.progress_textbox.insert(ctk.END, "[{ts}] finished\n".format(
+                    ts=datetime.now().strftime("%H:%M:%S")
                 ))
-                if deconvolution_status.get("exit_code") != 0:
-                    self.progress_textbox.insert(ctk.END, deconvolution_status.get("stacktrace"))
-                self.progress_label.configure(text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
-            self.progress_textbox.insert(ctk.END, "{ts}: finished\n".format(
+                self.progress_bar.stop()
+                self.running_experiment = None
+        else:
+            self.progress_textbox.insert(ctk.END, "[{ts}] no signal file(s) selected\n".format(
                 ts=datetime.now().strftime("%H:%M:%S")
             ))
-            self.progress_bar.stop()
-        else:
-            self.progress_label.configure(text="Progress:")
-            self.progress_bar.set(0.0)
-            self.progress_textbox.delete(1.0, ctk.END)
-            self.progress_textbox.insert(ctk.END, "no signal file(s) selected")
+            self.running_experiment = None
+
+    def stop(self):
+        previous_experiment = self.running_experiment
+        if previous_experiment is not None:
+            self.reset_experiment()
+            self.progress_textbox.insert(ctk.END, "[{ts}] {exp} stopped\n".format(
+                ts=datetime.now().strftime("%H:%M:%S"),
+                exp=previous_experiment
+            ))
