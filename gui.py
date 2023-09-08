@@ -11,6 +11,11 @@ class Gui(ctk.CTk):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.deconvolver = Deconvolver()
+        self.running_experiment = None
+        self.default_properties_file = ".properties"
+        self.default_signal_files = ".files"
+
         ctk.set_appearance_mode("System")
         ctk.set_default_color_theme("blue")
 
@@ -36,25 +41,34 @@ class Gui(ctk.CTk):
         self.signal_files_textbox = ctk.CTkTextbox(master=self.signal_selection_frame, wrap="none",
                                                    font=ctk.CTkFont(family="Courier"))
         self.signal_files_textbox.pack(pady=12, padx=10, expand=True, fill="both")
-        self.load_files()
+        self.load_signal_files()
 
-        self.select_file_button = ctk.CTkButton(master=self.signal_selection_frame, text="Select file(s)",
-                                                command=lambda: Thread(target=self.select_files).start())
-        self.select_file_button.pack(pady=12, padx=10)
+        self.select_signal_files_button = ctk.CTkButton(master=self.signal_selection_frame,
+                                                        text="Select file(s)...",
+                                                        command=lambda: Thread(target=self.select_signal_files).start())
+        self.select_signal_files_button.pack(pady=12, padx=10)
 
-        self.clear_selection_button = ctk.CTkButton(master=self.signal_selection_frame, text="Clear selection",
+        self.clear_selection_button = ctk.CTkButton(master=self.signal_selection_frame,
+                                                    text="Clear selection",
                                                     command=lambda: Thread(target=self.clear_files).start())
         self.clear_selection_button.pack(pady=12, padx=10)
 
-        self.model_selection_label = ctk.CTkLabel(master=self.model_selection_frame, text="Fitting model:")
+        self.model_selection_label = ctk.CTkLabel(master=self.model_selection_frame,
+                                                  text="Fitting model properties:")
         self.model_selection_label.pack(pady=12, padx=10)
 
         self.model_selection_textbox = ctk.CTkTextbox(master=self.model_selection_frame, wrap="none",
                                                       font=ctk.CTkFont(family="Courier"))
         self.model_selection_textbox.pack(pady=12, padx=10, expand=True, fill="both")
-        self.load_properties()
+        self.load_properties(self.default_properties_file)
 
-        self.model_save_button = ctk.CTkButton(master=self.model_selection_frame, text="Save",
+        self.model_open_button = ctk.CTkButton(master=self.model_selection_frame,
+                                               text="Open...",
+                                               command=lambda: Thread(target=self.select_properties_file).start())
+        self.model_open_button.pack(pady=12, padx=10)
+
+        self.model_save_button = ctk.CTkButton(master=self.model_selection_frame,
+                                               text="Save...",
                                                command=lambda: Thread(target=self.save_properties).start())
         self.model_save_button.pack(pady=12, padx=10)
 
@@ -78,43 +92,65 @@ class Gui(ctk.CTk):
                                          command=lambda: Thread(target=self.stop).start())
         self.stop_button.pack(pady=12, padx=10)
 
-        self.deconvolver = Deconvolver()
-        self.running_experiment = None
-
-    def load_properties(self):
-        with open(".properties", "r") as file:
+    def load_properties(self, file_path):
+        with open(file_path, "r") as file:
+            self.model_selection_textbox.delete(1.0, ctk.END)
             for line in file.readlines():
                 self.model_selection_textbox.insert(ctk.END, line)
 
-    def save_properties(self):
-        with open(".properties", "w") as file:
+    def save_default_properties(self):
+        with open(self.default_properties_file, "w") as file:
             file.write(self.model_selection_textbox.get("1.0", ctk.END).strip())
 
-    def load_files(self):
-        with open(".files", "r") as file:
+    def save_properties(self):
+        filetypes = (
+            ("Property file", "*.properties"),
+            ("All files", "*.*")
+        )
+        file = fd.asksaveasfile(title="Save property file",
+                                initialdir=pathlib.Path.home(),
+                                filetypes=filetypes)
+        with file:
+            file.write(self.model_selection_textbox.get("1.0", ctk.END).strip())
+
+    def load_signal_files(self):
+        with open(self.default_signal_files, "r") as file:
             for line in file.readlines():
                 self.signal_files_textbox.insert(ctk.END, line)
 
     def clear_files(self):
         self.signal_files_textbox.delete(1.0, ctk.END)
 
-    def save_files(self):
-        with open(".files", "w") as file:
+    def save_signal_files(self):
+        with open(self.default_signal_files, "w") as file:
             file.write(self.signal_files_textbox.get("1.0", ctk.END).strip())
 
-    def select_files(self):
+    def select_signal_files(self):
         filetypes = (
-            ('Text files', '*.dpt'),
-            ('Text files', '*.txt'),
-            ('All files', '*.*')
+            ("Text files", "*.dpt"),
+            ("Text files", "*.txt"),
+            ("All files", "*.*")
         )
         filenames = fd.askopenfilenames(
-            title='Open file(s)',
+            title="Open file(s)",
             initialdir=pathlib.Path.home(),
             filetypes=filetypes)
         self.signal_files_textbox.delete("1.0", ctk.END)
         for filename in filenames:
             self.signal_files_textbox.insert(ctk.END, filename + "\n")
+
+    def select_properties_file(self):
+        filetypes = (
+            ("Text files", "*.properties"),
+            ("All files", "*.*")
+        )
+        filename = fd.askopenfilename(
+            title="Open file",
+            initialdir=pathlib.Path.home(),
+            filetypes=filetypes
+        )
+        self.load_properties(filename)
+        print(filename)
 
     def extract_file_names(self):
         filenames = []
@@ -130,21 +166,21 @@ class Gui(ctk.CTk):
         return properties.properties
 
     def on_closing(self):
-        self.save_properties()
-        self.save_files()
+        self.save_default_properties()
+        self.save_signal_files()
         self.destroy()
 
     def reset_experiment(self):
         self.progress_label.configure(text="Progress: 0.00%")
         self.progress_bar.stop()
         self.progress_bar.set(0.0)
-        self.progress_textbox.delete(1.0, ctk.END)
         self.running_experiment = None
 
     def start(self):
         if self.running_experiment is not None:
             return
         experiment_label = datetime.now().strftime("experiment_%m_%d_%Y__%H_%M_%S")
+        self.progress_textbox.delete(1.0, ctk.END)
         self.reset_experiment()
         self.running_experiment = experiment_label
         filenames = self.extract_file_names()
