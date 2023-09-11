@@ -12,7 +12,6 @@ class Gui(ctk.CTk):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.deconvolver = Deconvolver()
-        self.running_experiment = None
         self.default_properties_file = ".properties"
         self.default_signal_files = ".files"
 
@@ -84,13 +83,16 @@ class Gui(ctk.CTk):
                                                font=ctk.CTkFont(family="Courier"))
         self.progress_textbox.pack(pady=12, padx=10, expand=True, fill="both")
 
-        self.start_button = ctk.CTkButton(master=self.progress_frame, text="start",
+        self.start_button = ctk.CTkButton(master=self.progress_frame, text="Start",
                                           command=lambda: Thread(target=self.start).start())
         self.start_button.pack(pady=12, padx=10)
 
-        self.stop_button = ctk.CTkButton(master=self.progress_frame, text="stop",
+        self.stop_button = ctk.CTkButton(master=self.progress_frame, text="Stop",
                                          command=lambda: Thread(target=self.stop).start())
         self.stop_button.pack(pady=12, padx=10)
+
+        self.running_experiment = None
+        self.reset_experiment()
 
     def load_properties(self, file_path):
         with open(file_path, "r") as file:
@@ -172,24 +174,46 @@ class Gui(ctk.CTk):
 
     def reset_experiment(self):
         self.progress_label.configure(text="Progress: 0.00%")
+        self.progress_textbox.delete(1.0, ctk.END)
         self.progress_bar.stop()
         self.progress_bar.set(0.0)
         self.running_experiment = None
+        self.start_button.configure(state="normal")
+        self.stop_button.configure(state="disabled")
+
+    def start_experiment(self, experiment_label):
+        self.progress_label.configure(text="Progress: 0.00%")
+        self.progress_textbox.delete(1.0, ctk.END)
+        self.progress_bar.start()
+        self.running_experiment = experiment_label
+        self.start_button.configure(state="disabled")
+        self.stop_button.configure(state="normal")
+        self.stop_button.configure(text="Stop")
+
+    def stop_experiment(self):
+        self.progress_bar.stop()
+        self.running_experiment = None
+        self.start_button.configure(state="disabled")
+        self.stop_button.configure(state="normal")
+        self.stop_button.configure(text="Reset")
+
+    def is_experiment_in_progress(self):
+        return self.running_experiment is not None
+
+    def add_progress_line(self, progress_line):
+        self.progress_textbox.insert(ctk.END, "[{ts}] {progress_line}\n".format(
+            ts=datetime.now().strftime("%H:%M:%S"),
+            progress_line=progress_line))
 
     def start(self):
-        if self.running_experiment is not None:
+        if self.is_experiment_in_progress():
             return
         experiment_label = datetime.now().strftime("experiment_%m_%d_%Y__%H_%M_%S")
-        self.progress_textbox.delete(1.0, ctk.END)
-        self.reset_experiment()
-        self.running_experiment = experiment_label
+        self.start_experiment(experiment_label)
         filenames = self.extract_file_names()
         properties = self.extract_properties()
         if len(filenames) > 0:
-            self.progress_bar.start()
-            self.progress_textbox.insert(ctk.END, "[{ts}] {exp} started\n".format(
-                ts=datetime.now().strftime("%H:%M:%S"),
-                exp=experiment_label))
+            self.add_progress_line("{exp} started".format(exp=experiment_label))
             for i in range(len(filenames)):
                 if experiment_label != self.running_experiment:
                     break
@@ -199,31 +223,27 @@ class Gui(ctk.CTk):
                     experiment_label=experiment_label,
                     properties=properties)
                 if experiment_label == self.running_experiment:
-                    self.progress_textbox.insert(ctk.END, "[{ts}] {status} {filename}\n".format(
-                        ts=datetime.now().strftime("%H:%M:%S"),
+                    self.add_progress_line("{status} {filename}".format(
                         status={True: "OK", False: "ERROR"}[deconvolution_status.get("exit_code") == 0],
                         filename=filename
                     ))
                     if deconvolution_status.get("exit_code") != 0:
-                        self.progress_textbox.insert(ctk.END, deconvolution_status.get("stacktrace"))
+                        self.add_progress_line(deconvolution_status.get("stacktrace"))
                     self.progress_label.configure(text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
             if experiment_label == self.running_experiment:
-                self.progress_textbox.insert(ctk.END, "[{ts}] finished\n".format(
-                    ts=datetime.now().strftime("%H:%M:%S")
-                ))
-                self.progress_bar.stop()
-                self.running_experiment = None
+                self.add_progress_line("{exp} finished".format(exp=experiment_label))
+                self.stop_experiment()
         else:
-            self.progress_textbox.insert(ctk.END, "[{ts}] no signal file(s) selected\n".format(
-                ts=datetime.now().strftime("%H:%M:%S")
-            ))
-            self.running_experiment = None
+            self.add_progress_line("No signal file(s) selected!")
+            self.stop_experiment()
 
     def stop(self):
         previous_experiment = self.running_experiment
         if previous_experiment is not None:
-            self.reset_experiment()
+            self.stop_experiment()
             self.progress_textbox.insert(ctk.END, "[{ts}] {exp} stopped\n".format(
                 ts=datetime.now().strftime("%H:%M:%S"),
                 exp=previous_experiment
             ))
+        else:
+            self.reset_experiment()
