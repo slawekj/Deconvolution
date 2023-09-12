@@ -225,7 +225,7 @@ class Deconvolver:
             output = {
                 "exit_code": 1,
                 "output_dir": output_dir,
-                "stacktrace": "{message}, see more details: {error_log}\n".format(message=str(e),
+                "error_message": "{message}, see more details: {error_log}\n".format(message=str(e),
                                                                                   error_log=error_log_path)
             }
             return output
