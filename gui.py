@@ -112,8 +112,9 @@ class Gui(ctk.CTk):
         file = fd.asksaveasfile(title="Save property file",
                                 initialdir=pathlib.Path.home(),
                                 filetypes=filetypes)
-        with file:
-            file.write(self.model_selection_textbox.get("1.0", ctk.END).strip())
+        if file is not None:
+            with file:
+                file.write(self.model_selection_textbox.get("1.0", ctk.END).strip())
 
     def load_signal_files(self):
         with open(self.default_signal_files, "r") as file:
@@ -137,7 +138,8 @@ class Gui(ctk.CTk):
             title="Open file(s)",
             initialdir=pathlib.Path.home(),
             filetypes=filetypes)
-        self.signal_files_textbox.delete("1.0", ctk.END)
+        if len(filenames) > 0:
+            self.signal_files_textbox.delete("1.0", ctk.END)
         for filename in filenames:
             self.signal_files_textbox.insert(ctk.END, filename + "\n")
 
@@ -151,8 +153,8 @@ class Gui(ctk.CTk):
             initialdir=pathlib.Path.home(),
             filetypes=filetypes
         )
-        self.load_properties(filename)
-        print(filename)
+        if len(filename) > 0:
+            self.load_properties(filename)
 
     def extract_file_names(self):
         filenames = []
