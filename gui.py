@@ -202,10 +202,39 @@ class Gui(ctk.CTk):
     def is_experiment_in_progress(self):
         return self.running_experiment is not None
 
+    def is_experiment_current(self, experiment_label):
+        return self.running_experiment == experiment_label
+
     def log_progress_line(self, progress_line):
         self.progress_textbox.insert(ctk.END, "[{ts}] {progress_line}\n".format(
             ts=datetime.now().strftime("%H:%M:%S"),
             progress_line=progress_line))
+
+    def log_ok_progress_line(self, progress_line):
+        self.progress_textbox.insert(ctk.END, "[{ts}] OK ".format(
+            ts=datetime.now().strftime("%H:%M:%S")
+        ))
+        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
+        self.progress_textbox.tag_add("green_letters",
+                                      f"1.0 + {current_text_length - 4} chars",
+                                      f"1.0 + {current_text_length - 2} chars")
+        self.progress_textbox.tag_config("green_letters", foreground="green")
+        self.progress_textbox.insert(ctk.END, "{progress_line}\n".format(
+            progress_line=progress_line
+        ))
+
+    def log_error_progress_line(self, progress_line):
+        self.progress_textbox.insert(ctk.END, "[{ts}] ERROR ".format(
+            ts=datetime.now().strftime("%H:%M:%S")
+        ))
+        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
+        self.progress_textbox.tag_add("red_letters",
+                                      f"1.0 + {current_text_length - 7} chars",
+                                      f"1.0 + {current_text_length - 2} chars")
+        self.progress_textbox.tag_config("red_letters", foreground="red")
+        self.progress_textbox.insert(ctk.END, "{progress_line}\n".format(
+            progress_line=progress_line
+        ))
 
     def start(self):
         filenames = self.extract_file_names()
@@ -215,21 +244,24 @@ class Gui(ctk.CTk):
             self.log_progress_line("{exp} started".format(exp=experiment_label))
             properties = self.extract_properties()
             for i in range(len(filenames)):
-                if experiment_label == self.running_experiment:
+                if self.is_experiment_current(experiment_label):
                     filename = filenames[i]
                     deconvolution_status = self.deconvolver.deconvolve_single_file(
                         signal_file_abs_path=filename,
                         experiment_label=experiment_label,
                         properties=properties)
-                    if experiment_label == self.running_experiment:
-                        self.log_progress_line("{status} {filename}".format(
-                            status={True: "OK", False: "ERROR"}[deconvolution_status.get("exit_code") == 0],
-                            filename=filename
-                        ))
-                        if deconvolution_status.get("exit_code") != 0:
+                    if self.is_experiment_current(experiment_label):
+                        if deconvolution_status.get("exit_code") == 0:
+                            self.log_ok_progress_line("{filename}".format(
+                                filename=filename
+                            ))
+                        else:
+                            self.log_error_progress_line("{filename}".format(
+                                filename=filename
+                            ))
                             self.log_progress_line(deconvolution_status.get("error_message").strip())
                         self.progress_label.configure(text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
-            if experiment_label == self.running_experiment:
+            if self.is_experiment_current(experiment_label):
                 self.log_progress_line("{exp} finished".format(exp=experiment_label))
                 self.stop_experiment()
         else:
@@ -237,9 +269,9 @@ class Gui(ctk.CTk):
             self.stop_experiment()
 
     def stop_or_reset(self):
-        previous_experiment = self.running_experiment
-        if previous_experiment is None:
+        if self.running_experiment is None:
             self.reset_experiment()
         else:
+            previous_experiment = self.running_experiment
             self.stop_experiment()
             self.log_progress_line("{exp} stopped".format(exp=previous_experiment))
