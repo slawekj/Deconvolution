@@ -204,7 +204,6 @@ class Gui(ctk.CTk):
         self.progress_textbox.insert(ctk.END, "[{ts}] {progress_line}\n".format(
             ts=datetime.now().strftime("%H:%M:%S"),
             progress_line=progress_line))
-        print(self.progress_textbox.size)
 
     def start(self):
         filenames = self.extract_file_names()
