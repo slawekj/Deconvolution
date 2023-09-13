@@ -175,8 +175,9 @@ class Gui(ctk.CTk):
         self.destroy()
 
     def reset_experiment(self):
-        self.progress_label.configure(text="Progress: 0.00%")
+        self.progress_label.configure(text="Progress:")
         self.progress_textbox.delete(1.0, ctk.END)
+        self.progress_textbox.insert(ctk.END, "Press \"Start\" to begin...")
         self.progress_bar.stop()
         self.progress_bar.set(0.0)
         self.running_experiment = None
