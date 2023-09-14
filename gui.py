@@ -239,8 +239,8 @@ class Gui(ctk.CTk):
 
     def start(self):
         filenames = self.extract_file_names()
+        experiment_label = datetime.now().strftime("experiment_%m_%d_%Y__%H_%M_%S")
         if len(filenames) > 0:
-            experiment_label = datetime.now().strftime("experiment_%m_%d_%Y__%H_%M_%S")
             self.start_experiment(experiment_label)
             self.log_progress_line("{exp} started".format(exp=experiment_label))
             properties = self.extract_properties()
@@ -266,6 +266,7 @@ class Gui(ctk.CTk):
                 self.log_progress_line("{exp} finished".format(exp=experiment_label))
                 self.stop_experiment()
         else:
+            self.start_experiment(experiment_label)
             self.log_progress_line("No signal file(s) selected!")
             self.stop_experiment()
 
