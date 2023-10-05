@@ -215,10 +215,6 @@ class Gui(ctk.CTk):
         self.experiment_label = None
         self.experiment_checkpoint = None
         self.start_button.configure(text="Start")
-        self.reset_button.configure(text="Reset")
-
-    def is_experiment_in_progress(self):
-        return self.experiment_uuid is not None
 
     def is_experiment_current(self, experiment_uuid):
         return self.experiment_uuid == experiment_uuid
@@ -311,10 +307,13 @@ class Gui(ctk.CTk):
             self.log_info_progress_line("{exp} resumed".format(exp=experiment_label))
             filenames = self.extract_file_names()
             if len(filenames) > 0:
+                first_index = 1
+                if self.experiment_checkpoint is not None:
+                    first_index = filenames.index(self.experiment_checkpoint) + 1
                 self.run(filenames=filenames,
                          experiment_label=experiment_label,
                          experiment_uuid=experiment_uuid,
-                         first_index=filenames.index(self.experiment_checkpoint) + 1,
+                         first_index=first_index,
                          last_index=len(filenames))
             else:
                 self.log_info_progress_line("No signal file(s) selected!")
