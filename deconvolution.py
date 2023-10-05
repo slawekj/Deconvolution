@@ -203,8 +203,12 @@ class Deconvolver:
                             sep=output_format_separator, index=False)
             aggregate_peaks_file = path_utils.join(output_dir, "all.peaks")
             if path_utils.exists(aggregate_peaks_file):
-                peaks_df.to_csv(path_or_buf=aggregate_peaks_file, sep=output_format_separator, index=False, mode="a",
-                                header=False)
+                existing_peaks_df = pd.read_csv(filepath_or_buffer=aggregate_peaks_file,
+                                                sep=output_format_separator)
+                if signal_file_abs_path not in existing_peaks_df["File"].values:
+                    peaks_df.to_csv(path_or_buf=aggregate_peaks_file, sep=output_format_separator, index=False,
+                                    mode="a",
+                                    header=False)
             else:
                 peaks_df.to_csv(path_or_buf=aggregate_peaks_file, sep=output_format_separator, index=False, header=True)
             output = {
@@ -226,7 +230,7 @@ class Deconvolver:
                 "exit_code": 1,
                 "output_dir": output_dir,
                 "error_message": "{message}, see more details: {error_log}\n".format(message=str(e),
-                                                                                  error_log=error_log_path)
+                                                                                     error_log=error_log_path)
             }
             return output
         finally:
