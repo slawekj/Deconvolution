@@ -1,4 +1,1 @@
-from gui import Gui
-
-gui = Gui()
-gui.mainloop()
+src/main.py
