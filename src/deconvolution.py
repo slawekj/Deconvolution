@@ -243,7 +243,7 @@ class Deconvolver:
         if properties.get(parameter_name + "_vary"):
             limits["vary"] = self.optional_property_bool(properties.get(parameter_name + "_vary"), True)
 
-        if limits["vary"]:
+        if "vary" not in limits or limits["vary"]:
             if properties.get(parameter_name + "_min"):
                 limits["min"] = self.optional_property_float(properties.get(parameter_name + "_min"),
                                                              parameter_default_min)
