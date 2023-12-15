@@ -239,22 +239,34 @@ class Deconvolver:
                     output.write(p + "=" + properties[p] + "\n")
 
     def determine_limits(self, properties, parameter_name, parameter_default_min, parameter_default_max):
-        limits = dict()
-        if properties.get(parameter_name + "_min"):
-            limits["min"] = self.optional_property_float(properties.get(parameter_name + "_min"), parameter_default_min)
-        else:
-            limits["min"] = parameter_default_min
-        if properties.get(parameter_name + "_max"):
-            limits["max"] = self.optional_property_float(properties.get(parameter_name + "_max"), parameter_default_max)
-        else:
-            limits["max"] = parameter_default_max
-        if properties.get(parameter_name + "_value"):
-            limits["value"] = self.optional_property_float(properties.get(parameter_name + "_value"),
-                                                           parameter_default_min)
-        else:
-            limits["value"] = parameter_default_min
+        limits = {}
         if properties.get(parameter_name + "_vary"):
             limits["vary"] = self.optional_property_bool(properties.get(parameter_name + "_vary"), True)
+
+        if limits["vary"]:
+            if properties.get(parameter_name + "_min"):
+                limits["min"] = self.optional_property_float(properties.get(parameter_name + "_min"),
+                                                             parameter_default_min)
+            else:
+                limits["min"] = parameter_default_min
+            if properties.get(parameter_name + "_max"):
+                limits["max"] = self.optional_property_float(properties.get(parameter_name + "_max"),
+                                                             parameter_default_max)
+            else:
+                limits["max"] = parameter_default_max
+
+            if properties.get(parameter_name + "_value"):
+                limits["value"] = self.optional_property_float(properties.get(parameter_name + "_value"),
+                                                               parameter_default_min)
+            else:
+                limits["value"] = parameter_default_min
+        else:
+            if properties.get(parameter_name + "_value"):
+                limits["value"] = self.optional_property_float(properties.get(parameter_name + "_value"),
+                                                               parameter_default_min)
+            else:
+                limits["value"] = parameter_default_min
+
         return limits
 
     @staticmethod
