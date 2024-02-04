@@ -1,6 +1,8 @@
 import customtkinter as ctk
 import pathlib
 import uuid
+import os
+
 from deconvolution import Deconvolver
 from threading import Thread
 from tkinter import filedialog as fd
@@ -13,8 +15,9 @@ class Gui(ctk.CTk):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.deconvolver = Deconvolver()
-        self.default_properties_file = "../etc/default.properties"
-        self.default_signal_files = "../etc/files.txt"
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        self.default_properties_file = os.path.join(dir_path, "..", "etc", "default.properties")
+        self.default_signal_files = os.path.join(dir_path, "..", "etc", "files.txt")
 
         ctk.set_appearance_mode("System")
         ctk.set_default_color_theme("blue")
