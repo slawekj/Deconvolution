@@ -13,8 +13,8 @@ class Gui(ctk.CTk):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.deconvolver = Deconvolver()
-        self.default_properties_file = ".properties"
-        self.default_signal_files = ".files"
+        self.default_properties_file = "../etc/default.properties"
+        self.default_signal_files = "../etc/files.txt"
 
         ctk.set_appearance_mode("System")
         ctk.set_default_color_theme("blue")
