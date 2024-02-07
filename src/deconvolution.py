@@ -16,14 +16,21 @@ class Deconvolver:
     def deconvolve_single_file(self, signal_file_abs_path, experiment_label, properties):
         output_dir = None
         try:
-            input_format_separator = self.optional_property_str(properties.get("input_format_separator"), "\t+")
-            output_format_separator = self.optional_property_str(properties.get("output_format_separator"), "\t")
-            input_format_header = self.optional_property_bool(properties.get("input_format_header"), False)
-            output_format_header = self.optional_property_bool(properties.get("output_format_header"), False)
-            method = self.optional_property_str(properties.get("method"), "differential_evolution")
+            input_format_separator = self.optional_property_str(
+                properties.get("input_format_separator"), "\t+")
+            output_format_separator = self.optional_property_str(
+                properties.get("output_format_separator"), "\t")
+            input_format_header = self.optional_property_bool(
+                properties.get("input_format_header"), False)
+            output_format_header = self.optional_property_bool(
+                properties.get("output_format_header"), False)
+            method = self.optional_property_str(
+                properties.get("method"), "differential_evolution")
             n_gauss = self.optional_property_int(properties.get("n_gauss"), 0)
-            n_lorentz = self.optional_property_int(properties.get("n_lorentz"), 0)
-            include_background = self.optional_property_bool(properties.get("include_background"), False)
+            n_lorentz = self.optional_property_int(
+                properties.get("n_lorentz"), 0)
+            include_background = self.optional_property_bool(
+                properties.get("include_background"), False)
             gauss_peak_amp_min_default = self.optional_property_float(
                 properties.get("gauss_peak_amp_min_default"), 0.0)
             gauss_peak_amp_max_default = self.optional_property_float(
@@ -46,13 +53,16 @@ class Deconvolver:
                 100.0)
 
             file_directory = path_utils.dirname(signal_file_abs_path)
-            file_name_with_extension = path_utils.basename(signal_file_abs_path)
-            file_name_root, file_name_extension = path_utils.splitext(file_name_with_extension)
+            file_name_with_extension = path_utils.basename(
+                signal_file_abs_path)
+            file_name_root, file_name_extension = path_utils.splitext(
+                file_name_with_extension)
             output_dir = path_utils.join(file_directory, experiment_label)
             path_utils.exists(output_dir) or os.mkdir(output_dir)
 
             data = pandas.read_csv(filepath_or_buffer=signal_file_abs_path,
-                                   header={True: 0, False: None}[input_format_header],
+                                   header={True: 0, False: None}[
+                                       input_format_header],
                                    names=["#Wave", "#Intensity"],
                                    sep=input_format_separator,
                                    engine="python")
@@ -80,7 +90,8 @@ class Deconvolver:
                 new_params = new_model.make_params(
                     amplitude=self.determine_limits(properties, f"gauss_peak{i + 1}_amp", gauss_peak_amp_min_default,
                                                     gauss_peak_amp_max_default),
-                    center=self.determine_limits(properties, f"gauss_peak{i + 1}_mu", signal_min_x, signal_max_x),
+                    center=self.determine_limits(
+                        properties, f"gauss_peak{i + 1}_mu", signal_min_x, signal_max_x),
                     sigma=self.determine_limits(properties, f"gauss_peak{i + 1}_sigma", gauss_peak_sigma_min_default,
                                                 gauss_peak_sigma_max_default))
                 composite_params.update(new_params)
@@ -91,7 +102,8 @@ class Deconvolver:
                 new_params = new_model.make_params(
                     amplitude=self.determine_limits(properties, f"lorentz_peak{i + 1}_amp",
                                                     lorentz_peak_amp_min_default, lorentz_peak_amp_max_default),
-                    center=self.determine_limits(properties, f"lorentz_peak{i + 1}_mu", signal_min_x, signal_max_x),
+                    center=self.determine_limits(
+                        properties, f"lorentz_peak{i + 1}_mu", signal_min_x, signal_max_x),
                     sigma=self.determine_limits(properties, f"lorentz_peak{i + 1}_sigma",
                                                 lorentz_peak_sigma_min_default,
                                                 lorentz_peak_sigma_max_default))
@@ -111,7 +123,8 @@ class Deconvolver:
             ax.plot(x, signal, label='signal')
             ax.plot(x, result.best_fit, '--', label='fit')
 
-            fit_df = pd.DataFrame(list(zip(x, result.best_fit)), columns=["#Wave", "#Intensity"])
+            fit_df = pd.DataFrame(list(zip(x, result.best_fit)), columns=[
+                                  "#Wave", "#Intensity"])
             fit_df.to_csv(
                 path_or_buf=path_utils.join(output_dir,
                                             file_name_root + ".fit{ex}".format(ex=file_name_extension)),
@@ -125,11 +138,13 @@ class Deconvolver:
                 sigma = result.best_values[f"gauss_peak{i + 1}_sigma"]
                 height = 0.3989423 * amp / max(1e-15, sigma)
                 fwhm = 2.3548200 * sigma
-                y = [lmfit.lineshapes.gaussian(i, amp, center, sigma) for i in x]
+                y = [lmfit.lineshapes.gaussian(
+                    i, amp, center, sigma) for i in x]
                 ax.fill(x, y,
                         label=f"G{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
                         alpha=0.1)
-                peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
+                peak_df = pd.DataFrame(list(zip(x, y)), columns=[
+                                       "#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".gauss_peak{n}{ex}".format(n=i + 1,
                                                                                                         ex=file_name_extension)),
@@ -154,11 +169,13 @@ class Deconvolver:
                 sigma = result.best_values[f"lorentz_peak{i + 1}_sigma"]
                 height = 0.3183099 * amp / max(1e-15, sigma)
                 fwhm = 2.0 * sigma
-                y = [lmfit.lineshapes.lorentzian(i, amp, center, sigma) for i in x]
+                y = [lmfit.lineshapes.lorentzian(
+                    i, amp, center, sigma) for i in x]
                 ax.fill(x, y,
                         label=f"L{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
                         alpha=0.1)
-                peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
+                peak_df = pd.DataFrame(list(zip(x, y)), columns=[
+                                       "#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".lorentz_peak{n}{ex}".format(n=i + 1,
                                                                                                           ex=file_name_extension)),
@@ -181,7 +198,8 @@ class Deconvolver:
                 bkg_c = result.best_values["bkg_c"]
                 y = [bkg_c for _ in x]
                 ax.plot(x, y, '--', label=f"Background: {round(bkg_c, 2)}")
-                peak_df = pd.DataFrame(list(zip(x, y)), columns=["#Wave", "#Intensity"])
+                peak_df = pd.DataFrame(list(zip(x, y)), columns=[
+                                       "#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".background{ex}".format(
                                                                ex=file_name_extension)),
@@ -210,7 +228,8 @@ class Deconvolver:
                                     mode="a",
                                     header=False)
             else:
-                peaks_df.to_csv(path_or_buf=aggregate_peaks_file, sep=output_format_separator, index=False, header=True)
+                peaks_df.to_csv(path_or_buf=aggregate_peaks_file,
+                                sep=output_format_separator, index=False, header=True)
             output = {
                 "exit_code": 0,
                 "output_dir": output_dir
@@ -241,7 +260,8 @@ class Deconvolver:
     def determine_limits(self, properties, parameter_name, parameter_default_min, parameter_default_max):
         limits = {}
         if properties.get(parameter_name + "_vary"):
-            limits["vary"] = self.optional_property_bool(properties.get(parameter_name + "_vary"), True)
+            limits["vary"] = self.optional_property_bool(
+                properties.get(parameter_name + "_vary"), True)
 
         if "vary" not in limits or limits["vary"]:
             if properties.get(parameter_name + "_min"):

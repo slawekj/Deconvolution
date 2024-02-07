@@ -16,8 +16,10 @@ class Gui(ctk.CTk):
         super().__init__(**kwargs)
         self.deconvolver = Deconvolver()
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        self.default_properties_file = os.path.join(dir_path, "..", "etc", "default.properties")
-        self.default_signal_files = os.path.join(dir_path, "..", "etc", "files.txt")
+        self.default_properties_file = os.path.join(
+            dir_path, "..", "etc", "default.properties")
+        self.default_signal_files = os.path.join(
+            dir_path, "..", "etc", "files.txt")
 
         ctk.set_appearance_mode("System")
         ctk.set_default_color_theme("blue")
@@ -30,20 +32,25 @@ class Gui(ctk.CTk):
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         self.signal_selection_frame = ctk.CTkFrame(master=self)
-        self.signal_selection_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.signal_selection_frame.grid(
+            row=0, column=0, padx=10, pady=10, sticky="nsew")
 
         self.model_selection_frame = ctk.CTkFrame(master=self)
-        self.model_selection_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+        self.model_selection_frame.grid(
+            row=0, column=1, padx=10, pady=10, sticky="nsew")
 
         self.progress_frame = ctk.CTkFrame(master=self)
-        self.progress_frame.grid(row=0, column=2, padx=10, pady=10, sticky="nsew")
+        self.progress_frame.grid(
+            row=0, column=2, padx=10, pady=10, sticky="nsew")
 
-        self.model_selection_label = ctk.CTkLabel(master=self.signal_selection_frame, text="Signal file(s):")
+        self.model_selection_label = ctk.CTkLabel(
+            master=self.signal_selection_frame, text="Signal file(s):")
         self.model_selection_label.pack(pady=12, padx=10)
 
         self.signal_files_textbox = ctk.CTkTextbox(master=self.signal_selection_frame, wrap="none",
                                                    font=ctk.CTkFont(family="Courier"))
-        self.signal_files_textbox.pack(pady=12, padx=10, expand=True, fill="both")
+        self.signal_files_textbox.pack(
+            pady=12, padx=10, expand=True, fill="both")
         self.load_signal_files()
 
         self.select_signal_files_button = ctk.CTkButton(master=self.signal_selection_frame,
@@ -62,7 +69,8 @@ class Gui(ctk.CTk):
 
         self.model_selection_textbox = ctk.CTkTextbox(master=self.model_selection_frame, wrap="none",
                                                       font=ctk.CTkFont(family="Courier"))
-        self.model_selection_textbox.pack(pady=12, padx=10, expand=True, fill="both")
+        self.model_selection_textbox.pack(
+            pady=12, padx=10, expand=True, fill="both")
         self.load_properties(self.default_properties_file)
 
         self.model_open_button = ctk.CTkButton(master=self.model_selection_frame,
@@ -75,7 +83,8 @@ class Gui(ctk.CTk):
                                                command=lambda: Thread(target=self.save_properties).start())
         self.model_save_button.pack(pady=12, padx=10)
 
-        self.progress_label = ctk.CTkLabel(master=self.progress_frame, text="Progress:")
+        self.progress_label = ctk.CTkLabel(
+            master=self.progress_frame, text="Progress:")
         self.progress_label.pack(pady=12, padx=10)
 
         self.progress_bar = ctk.CTkProgressBar(master=self.progress_frame, orientation="horizontal",
@@ -108,7 +117,8 @@ class Gui(ctk.CTk):
 
     def save_default_properties(self):
         with open(self.default_properties_file, "w") as file:
-            file.write(self.model_selection_textbox.get("1.0", ctk.END).strip())
+            file.write(self.model_selection_textbox.get(
+                "1.0", ctk.END).strip())
 
     def save_properties(self):
         filetypes = (
@@ -120,7 +130,8 @@ class Gui(ctk.CTk):
                                 filetypes=filetypes)
         if file is not None:
             with file:
-                file.write(self.model_selection_textbox.get("1.0", ctk.END).strip())
+                file.write(self.model_selection_textbox.get(
+                    "1.0", ctk.END).strip())
 
     def load_signal_files(self):
         with open(self.default_signal_files, "r") as file:
@@ -279,12 +290,14 @@ class Gui(ctk.CTk):
                         self.log_error_progress_line("{filename}".format(
                             filename=filename
                         ))
-                        self.log_info_progress_line(deconvolution_status.get("error_message").strip())
+                        self.log_info_progress_line(
+                            deconvolution_status.get("error_message").strip())
                     self.progress_label.configure(
                         text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
                     self.experiment_checkpoint = filename
         if self.is_experiment_current(experiment_uuid):
-            self.log_info_progress_line("{exp} finished".format(exp=experiment_label))
+            self.log_info_progress_line(
+                "{exp} finished".format(exp=experiment_label))
             self.finish_experiment()
 
     def start_pause_resume(self):
@@ -294,7 +307,8 @@ class Gui(ctk.CTk):
             self.start_experiment(experiment_label, experiment_uuid)
             filenames = self.extract_file_names()
             if len(filenames) > 0:
-                self.log_info_progress_line("{exp} started".format(exp=experiment_label))
+                self.log_info_progress_line(
+                    "{exp} started".format(exp=experiment_label))
                 self.run(filenames=filenames,
                          experiment_label=experiment_label,
                          experiment_uuid=experiment_uuid,
@@ -307,12 +321,14 @@ class Gui(ctk.CTk):
             experiment_label = self.experiment_label
             experiment_uuid = str(uuid.uuid4())
             self.resume_experiment(experiment_label, experiment_uuid)
-            self.log_info_progress_line("{exp} resumed".format(exp=experiment_label))
+            self.log_info_progress_line(
+                "{exp} resumed".format(exp=experiment_label))
             filenames = self.extract_file_names()
             if len(filenames) > 0:
                 first_index = 1
                 if self.experiment_checkpoint is not None:
-                    first_index = filenames.index(self.experiment_checkpoint) + 1
+                    first_index = filenames.index(
+                        self.experiment_checkpoint) + 1
                 self.run(filenames=filenames,
                          experiment_label=experiment_label,
                          experiment_uuid=experiment_uuid,
@@ -323,7 +339,8 @@ class Gui(ctk.CTk):
                 self.finish_experiment()
         else:
             self.pause_experiment()
-            self.log_info_progress_line("{exp} paused".format(exp=self.experiment_label))
+            self.log_info_progress_line(
+                "{exp} paused".format(exp=self.experiment_label))
 
     def reset(self):
         self.reset_experiment()

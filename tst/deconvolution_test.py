@@ -1,9 +1,9 @@
-import sys, os
-sys.path.append(os.path.join(sys.path[0], "..", "src"))
-
-import unittest
-from deconvolution import Deconvolver
 from jproperties import Properties
+from deconvolution import Deconvolver
+import unittest
+import sys
+import os
+sys.path.append(os.path.join(sys.path[0], "..", "src"))
 
 
 class DeconvolverTest(unittest.TestCase):
@@ -46,8 +46,10 @@ class DeconvolverTest(unittest.TestCase):
             self.assertEqual(1, len(peaks[key]))
 
     def test_optional_property_str(self):
-        self.assertEqual("default", self.d.optional_property_str(None, "default"))
-        self.assertEqual("value", self.d.optional_property_str("value", "default"))
+        self.assertEqual(
+            "default", self.d.optional_property_str(None, "default"))
+        self.assertEqual(
+            "value", self.d.optional_property_str("value", "default"))
 
     def test_optional_property_bool(self):
         self.assertEqual(False, self.d.optional_property_bool(None, False))
