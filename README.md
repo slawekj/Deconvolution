@@ -12,12 +12,13 @@ and produces results as text files and pdf figures, e.g.:
 ## Requirements
 
 This program uses [CustomTkinter](https://customtkinter.tomschimansky.com/) to create a user interface. On MacOS you
-may need to install additional libraries, i.e.:
+may need to install additional system libraries, i.e.:
 ```commandline
 brew install python-tk
 ```
 
-I haven't tried it on Windows or Linux. All additional requirements are listed in `requirements.txt` file:
+I believe Windows comes preinstalled with all necessary system libraries. I haven't tried or Linux. 
+All additional requirements are listed in `requirements.txt` file:
 
 ```commandline
  % cat requirements.txt 
@@ -30,7 +31,7 @@ jproperties
 
 ## Development
 
-The easiest way to run and develop this project is by resolving dependencies and running the program:
+The easiest way to run and develop this project is by calling:
 ```commandline
 % pip install -r requirements.txt
 % python src/main.py
