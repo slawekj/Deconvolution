@@ -10,7 +10,7 @@ and produces results as text files and pdf figures, e.g.:
 
 ![Screenshot2](resources/Screenshot2.png "Screenshot2")
 
-In the example above, `signal` was given as input, and the program was set up in a way to deconvolve
+In the example above, `signal` was given as input, and the program was set up to deconvolve
 the last visible peak into 6 distinct Gaussians. The plot includes `fit`, which is a sum of detected 
 components, i.e. $G_1 + G_2 + ... + G_6$.
 
