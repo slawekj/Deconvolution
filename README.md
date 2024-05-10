@@ -19,7 +19,7 @@ components, i.e. $G_1 + G_2 + ... + G_6$.
 This program is written in Python and requires it to run! It was developed and tested using `Python 3.11.4`.
 
 Required Python dependencies are listed in `requirements.txt` file. 
-Additional system libraries may be required, see you operating system's manual if necessary.
+Additional system libraries may be required, see your operating system's manual if necessary.
 
 ## Development
 
