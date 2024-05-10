@@ -1,6 +1,6 @@
 # Deconvolution
-This is a Python program to deconvolve peaks from a signal. It has a simple user interface to load signal
-files, control deconvolution parameters, and track progress:
+This is a program deconvolving peaks from a signal, typically required in spectroscopy. 
+It has a simple user interface to load signal files, control deconvolution parameters, and track progress:
 
 ![Screenshot1](resources/Screenshot1.png "Screenshot1")
 
@@ -11,13 +11,8 @@ and produces results as text files and pdf figures, e.g.:
 
 ## Requirements
 
-This program uses [CustomTkinter](https://customtkinter.tomschimansky.com/) to create a user interface. On MacOS you
-may need to install additional system libraries, i.e.:
-```commandline
-brew install python-tk
-```
+This program is written in Python and requires it to run! It was developed and tested using `Python 3.11.4`.
 
-I believe Windows comes preinstalled with all necessary system libraries. I haven't tried or Linux. 
 All additional requirements are listed in `requirements.txt` file:
 
 ```commandline
@@ -28,6 +23,8 @@ matplotlib
 pandas
 jproperties
 ```
+
+Additional system libraries may be required, see you operating system's manual if necessary.
 
 ## Development
 
