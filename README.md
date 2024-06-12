@@ -30,7 +30,7 @@ pip install -r requirements.txt
 
 , and then running the main program:
 ```commandline
-python src/main.py
+python src/main_tk.py
 ```
 
 Happy Deconvolving!

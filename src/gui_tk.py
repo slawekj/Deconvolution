@@ -10,7 +10,7 @@ from jproperties import Properties
 from datetime import datetime
 
 
-class Gui(ctk.CTk):
+class GuiTk(ctk.CTk):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
