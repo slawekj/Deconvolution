@@ -10,12 +10,11 @@ class GuiQt(QMainWindow):
         self.button_select_files.clicked.connect(self.select_files)
         self.button_clear_selection.clicked.connect(self.clear_selection)
         self.button_open.clicked.connect(self.open)
+        self.button_save.clicked.connect(self.save)
 
     def select_files(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.ReadOnly
-        filenames, _ = QFileDialog.getOpenFileNames(self, "Open file(s)", "", "Text files (*.dpt, *.txt, *.*)",
-                                                    options=options)
+        filenames, _ = QFileDialog.getOpenFileNames(self, "Open file(s)", "",
+                                                    "DPT Files (*.dpt);;Text Files (*.txt);;All Files (*)")
         if len(filenames) > 0:
             self.text_signal_files.setText("")
         for filename in filenames:
@@ -25,10 +24,8 @@ class GuiQt(QMainWindow):
         self.text_signal_files.setText("")
 
     def open(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.ReadOnly
-        filename, _ = QFileDialog.getOpenFileName(self, "Open file", "", "Text files (*.properties, *.*)",
-                                                  options=options)
+        filename, _ = QFileDialog.getOpenFileName(self, "Open file", "",
+                                                  "Property Files (*.properties);;All Files (*)")
         if len(filename) > 0:
             self.load_properties(filename)
 
@@ -37,3 +34,10 @@ class GuiQt(QMainWindow):
             self.text_fitting_model_properties.setText("")
             for line in file:
                 self.text_fitting_model_properties.append(line.strip())
+
+    def save(self):
+        filename, _ = QFileDialog.getSaveFileName(self, "Save file", "",
+                                                  "Property Files (*.properties);;All Files (*))")
+        if filename:
+            with open(filename, "w") as file:
+                file.write(self.text_fitting_model_properties.toPlainText())
