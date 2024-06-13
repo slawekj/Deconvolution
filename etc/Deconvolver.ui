@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -24,10 +24,23 @@
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_signal_files">
+     <item row="1" column="1">
+      <spacer name="horizontal_spacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>248</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="4" column="2">
+      <widget class="QPushButton" name="button_reset">
        <property name="text">
-        <string>Signal file(s):</string>
+        <string>Reset</string>
        </property>
       </widget>
      </item>
@@ -38,10 +51,38 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="2">
-      <widget class="QLabel" name="label_progress">
+     <item row="3" column="0">
+      <widget class="QPushButton" name="button_select_files">
        <property name="text">
-        <string>Progress:</string>
+        <string>Select file(s)...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QPushButton" name="button_save">
+       <property name="text">
+        <string>Save...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_signal_files">
+       <property name="text">
+        <string>Signal file(s):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QProgressBar" name="progress_bar">
+       <property name="value">
+        <number>24</number>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QPushButton" name="button_start">
+       <property name="text">
+        <string>Start</string>
        </property>
       </widget>
      </item>
@@ -58,39 +99,17 @@
        </property>
       </spacer>
      </item>
-     <item row="1" column="1">
-      <spacer name="horizontal_spacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>248</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="1" column="2">
-      <widget class="QProgressBar" name="progress_bar">
-       <property name="value">
-        <number>24</number>
+     <item row="4" column="0">
+      <widget class="QPushButton" name="button_clear_selection">
+       <property name="text">
+        <string>Clear selection</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QTextBrowser" name="text_signal_files"/>
-     </item>
-     <item row="2" column="1">
-      <widget class="QTextBrowser" name="text_fitting_model_properties"/>
-     </item>
-     <item row="2" column="2">
-      <widget class="QTextBrowser" name="text_progress"/>
-     </item>
-     <item row="3" column="0">
-      <widget class="QPushButton" name="button_select_files">
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_progress">
        <property name="text">
-        <string>Select file(s)...</string>
+        <string>Progress:</string>
        </property>
       </widget>
      </item>
@@ -101,33 +120,14 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="2">
-      <widget class="QPushButton" name="button_start">
-       <property name="text">
-        <string>Start</string>
-       </property>
-      </widget>
+     <item row="2" column="2">
+      <widget class="QTextEdit" name="text_progress"/>
      </item>
-     <item row="4" column="0">
-      <widget class="QPushButton" name="button_clear_selection">
-       <property name="text">
-        <string>Clear selection</string>
-       </property>
-      </widget>
+     <item row="2" column="1">
+      <widget class="QTextEdit" name="text_fitting_model_properties"/>
      </item>
-     <item row="4" column="1">
-      <widget class="QPushButton" name="button_save">
-       <property name="text">
-        <string>Save...</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="2">
-      <widget class="QPushButton" name="button_reset">
-       <property name="text">
-        <string>Reset</string>
-       </property>
-      </widget>
+     <item row="2" column="0">
+      <widget class="QTextEdit" name="text_signal_files"/>
      </item>
     </layout>
    </widget>

@@ -1,6 +1,7 @@
 import os
 import uuid
 from datetime import datetime
+from threading import Thread
 
 from PyQt5.QtWidgets import QMainWindow, QFileDialog
 from PyQt5.uic import loadUi
@@ -24,6 +25,7 @@ class GuiQt(QMainWindow):
         self.button_open.clicked.connect(self.open)
         self.button_save.clicked.connect(self.save)
         self.button_start.clicked.connect(self.start_pause_resume)
+        self.button_reset.clicked.connect(self.reset)
 
         self.experiment_uuid = None
         self.experiment_label = None
