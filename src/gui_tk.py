@@ -51,7 +51,7 @@ class GuiTk(ctk.CTk):
                                                    font=ctk.CTkFont(family="Courier"))
         self.signal_files_textbox.pack(
             pady=12, padx=10, expand=True, fill="both")
-        self.load_signal_files()
+        self.load_default_signal_files()
 
         self.select_signal_files_button = ctk.CTkButton(master=self.signal_selection_frame,
                                                         text="Select file(s)...",
@@ -133,7 +133,7 @@ class GuiTk(ctk.CTk):
                 file.write(self.model_selection_textbox.get(
                     "1.0", ctk.END).strip())
 
-    def load_signal_files(self):
+    def load_default_signal_files(self):
         with open(self.default_signal_files, "r") as file:
             for line in file.readlines():
                 self.signal_files_textbox.insert(ctk.END, line)
