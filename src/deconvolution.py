@@ -13,7 +13,7 @@ import pandas
 
 class Deconvolver:
 
-    def deconvolve_single_file(self, signal_file_abs_path, experiment_label, properties):
+    def deconvolve_single_file(self, signal_file_abs_path, experiment_label, properties, plot_peaks=True):
         output_dir = None
         try:
             input_format_separator = self.optional_property_str(
@@ -124,7 +124,7 @@ class Deconvolver:
             ax.plot(x, result.best_fit, '--', label='fit')
 
             fit_df = pd.DataFrame(list(zip(x, result.best_fit)), columns=[
-                                  "#Wave", "#Intensity"])
+                "#Wave", "#Intensity"])
             fit_df.to_csv(
                 path_or_buf=path_utils.join(output_dir,
                                             file_name_root + ".fit{ex}".format(ex=file_name_extension)),
@@ -144,7 +144,7 @@ class Deconvolver:
                         label=f"G{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
                         alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=[
-                                       "#Wave", "#Intensity"])
+                    "#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".gauss_peak{n}{ex}".format(n=i + 1,
                                                                                                         ex=file_name_extension)),
@@ -175,7 +175,7 @@ class Deconvolver:
                         label=f"L{i + 1}: \u0391: {round(amp, 2)}, \u03bc: {round(center, 2)}, \u03c3: {round(sigma, 2)}",
                         alpha=0.1)
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=[
-                                       "#Wave", "#Intensity"])
+                    "#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".lorentz_peak{n}{ex}".format(n=i + 1,
                                                                                                           ex=file_name_extension)),
@@ -199,7 +199,7 @@ class Deconvolver:
                 y = [bkg_c for _ in x]
                 ax.plot(x, y, '--', label=f"Background: {round(bkg_c, 2)}")
                 peak_df = pd.DataFrame(list(zip(x, y)), columns=[
-                                       "#Wave", "#Intensity"])
+                    "#Wave", "#Intensity"])
                 peak_df.to_csv(path_or_buf=path_utils.join(output_dir,
                                                            file_name_root + ".background{ex}".format(
                                                                ex=file_name_extension)),
@@ -211,9 +211,14 @@ class Deconvolver:
                       fancybox=True,
                       shadow=True,
                       ncol=3)
-            plt.savefig(path_utils.join(output_dir, file_name_root + ".pdf"),
-                        format="pdf",
-                        bbox_inches="tight")
+
+            # TODO this doesnt work in qt
+
+            if plot_peaks:
+                plt.savefig(path_utils.join(output_dir, file_name_root + ".pdf"),
+                            format="pdf",
+                            bbox_inches="tight")
+
             with open(path_utils.join(output_dir, file_name_root + ".model.txt"), "w") as output:
                 output.writelines(result.fit_report())
             peaks_df = pd.DataFrame(peaks)
