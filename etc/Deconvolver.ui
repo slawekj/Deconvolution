@@ -121,13 +121,25 @@
       </widget>
      </item>
      <item row="2" column="2">
-      <widget class="QTextEdit" name="text_progress"/>
+      <widget class="QTextEdit" name="text_progress">
+       <property name="lineWrapMode">
+        <enum>QTextEdit::NoWrap</enum>
+       </property>
+      </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QTextEdit" name="text_fitting_model_properties"/>
+      <widget class="QTextEdit" name="text_fitting_model_properties">
+       <property name="lineWrapMode">
+        <enum>QTextEdit::NoWrap</enum>
+       </property>
+      </widget>
      </item>
      <item row="2" column="0">
-      <widget class="QTextEdit" name="text_signal_files"/>
+      <widget class="QTextEdit" name="text_signal_files">
+       <property name="lineWrapMode">
+        <enum>QTextEdit::NoWrap</enum>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>

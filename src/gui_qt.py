@@ -13,6 +13,8 @@ from src.deconvolution import Deconvolver
 class Signals(QObject):
     reset_text_progress = pyqtSignal(str)
     update_text_progress = pyqtSignal(str)
+    start_bar_progress = pyqtSignal()
+    stop_bar_progress = pyqtSignal(int)
 
 
 class AsyncExecution(QRunnable):
@@ -65,6 +67,8 @@ class GuiQt(QMainWindow):
         execution = AsyncExecution(self.start_pause_resume)
         execution.signals.update_text_progress.connect(self.log_progress_line)
         execution.signals.reset_text_progress.connect(self.reset_progress_line)
+        execution.signals.start_bar_progress.connect(self.start_progress_bar)
+        execution.signals.stop_bar_progress.connect(self.stop_progress_bar)
         self.threadpool.start(execution)
 
     def select_files(self):
@@ -131,31 +135,33 @@ class GuiQt(QMainWindow):
         if signal_text_progress_reset:
             signal_text_progress_reset.emit("Press \"Start\" to begin...")
         else:
-            self.text_progress.setText("")
-            self.text_progress.setText("Press \"Start\" to begin...")
-        self.progress_bar.reset()
+            self.reset_progress_line("Press \"Start\" to begin...")
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(100)
         self.progress_bar.setValue(0)
         self.experiment_uuid = None
         self.experiment_label = None
         self.experiment_checkpoint = None
         self.button_start.setText("Start")
 
-    def start_experiment(self, experiment_label, experiment_uuid, signal_text_progress_reset=None):
+    def start_experiment(self, experiment_label, experiment_uuid, signal_text_progress_reset=None,
+                         signal_bar_progress_start=None):
         self.label_progress.setText("Progress: 0.00%")
         if signal_text_progress_reset:
             signal_text_progress_reset.emit("")
         else:
             self.text_progress.setText("")
-        self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(0)
+        if signal_bar_progress_start:
+            signal_bar_progress_start.emit()
+        else:
+            self.start_progress_bar()
         self.experiment_uuid = experiment_uuid
         self.experiment_label = experiment_label
         # self.experiment_checkpoint unchanged
         self.button_start.setText("Pause")
 
     def resume_experiment(self, experiment_label, experiment_uuid):
-        self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(0)
+        self.start_progress_bar()
         self.experiment_uuid = experiment_uuid
         self.experiment_label = experiment_label
         # self.experiment_checkpoint unchanged
@@ -167,9 +173,11 @@ class GuiQt(QMainWindow):
         self.experiment_uuid = None
         self.button_start.setText("Resume")
 
-    def finish_experiment(self):
-        self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(100)
+    def finish_experiment(self, signal_bar_progress_stop=None):
+        if signal_bar_progress_stop:
+            signal_bar_progress_stop.emit(100)
+        else:
+            self.stop_progress_bar(100)
         self.experiment_uuid = None
         self.experiment_label = None
         self.experiment_checkpoint = None
@@ -187,6 +195,15 @@ class GuiQt(QMainWindow):
 
     def reset_progress_line(self, progress_line):
         self.text_progress.setText(progress_line)
+
+    def start_progress_bar(self):
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(0)
+
+    def stop_progress_bar(self, value):
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(100)
+        self.progress_bar.setValue(value)
 
     def run(self, signals, experiment_label, experiment_uuid, filenames, first_index, last_index):
         properties = self.extract_properties()
@@ -209,13 +226,14 @@ class GuiQt(QMainWindow):
                     self.experiment_checkpoint = filename
         if self.is_experiment_current(experiment_uuid):
             signals.update_text_progress.emit("{exp} finished".format(exp=experiment_label))
-            self.finish_experiment()
+            self.finish_experiment(signals.stop_bar_progress)
 
     def start_pause_resume(self, signals):
         if self.experiment_uuid is None and self.experiment_label is None:
             experiment_label = datetime.now().strftime("experiment_%m_%d_%Y__%H_%M_%S")
             experiment_uuid = str(uuid.uuid4())
-            self.start_experiment(experiment_label, experiment_uuid, signals.reset_text_progress)
+            self.start_experiment(experiment_label, experiment_uuid, signals.reset_text_progress,
+                                  signals.start_bar_progress)
             filenames = self.extract_file_names()
             if len(filenames) > 0:
                 signals.update_text_progress.emit("{exp} started".format(exp=experiment_label))
