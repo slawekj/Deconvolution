@@ -1,5 +1,0 @@
-/Users/jslawek/Playground/Deconvolution/samples/signal_01.dpt
-/Users/jslawek/Playground/Deconvolution/samples/signal_02.dpt
-/Users/jslawek/Playground/Deconvolution/samples/signal_03.dpt
-/Users/jslawek/Playground/Deconvolution/samples/signal_04.dpt
-/Users/jslawek/Playground/Deconvolution/samples/signal_05.dpt
