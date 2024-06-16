@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QMainWindow, QFileDialog
 from PyQt5.uic import loadUi
 from jproperties import Properties
 
-from src.deconvolution import Deconvolver
+from deconvolution import Deconvolver
 
 
 class Signals(QObject):
