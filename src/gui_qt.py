@@ -111,6 +111,7 @@ class GuiQt(QMainWindow):
         self.experiment_uuid = None
         self.experiment_label = None
         self.experiment_checkpoint = None
+        self.progress_percent = 0
         self.reset_experiment()
 
     def closeEvent(self, event):
@@ -181,7 +182,8 @@ class GuiQt(QMainWindow):
         properties.load(self.text_fitting_model_properties.toPlainText())
         return properties.properties
 
-    def reset_experiment(self, signal_text_progress_reset=None):
+    def reset_experiment(self):
+        self.progress_percent = 0
         self.label_progress.setText("Progress:")
         self.thread_safe_progress_text.reset("Press \"Start\" to begin...")
         self.thread_safe_progress_bar.stop(0)
@@ -191,6 +193,7 @@ class GuiQt(QMainWindow):
         self.button_start.setText("Start")
 
     def start_experiment(self, experiment_label, experiment_uuid):
+        self.progress_percent = 0
         self.label_progress.setText("Progress: 0.00%")
         self.thread_safe_progress_text.reset("")
         self.thread_safe_progress_bar.start()
@@ -207,7 +210,7 @@ class GuiQt(QMainWindow):
         self.button_start.setText("Pause")
 
     def pause_experiment(self):
-        self.thread_safe_progress_bar.start()
+        self.thread_safe_progress_bar.stop(int(self.progress_percent))
         self.experiment_uuid = None
         self.button_start.setText("Resume")
 
@@ -245,11 +248,11 @@ class GuiQt(QMainWindow):
                         # TODO log as error
                         self.thread_safe_progress_text.append("{filename} failed".format(filename=filename))
                         self.thread_safe_progress_text.append(deconvolution_status.get("error_message").strip())
-                    self.label_progress.setText(f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
+                    self.progress_percent = round((i + 1) / len(filenames) * 100, 2)
+                    self.label_progress.setText(f"Progress: {self.progress_percent}%")
                     self.experiment_checkpoint = filename
         if self.is_experiment_current(experiment_uuid):
             self.thread_safe_progress_text.append("{exp} finished".format(exp=experiment_label))
-            # TODO finish experiment
             self.finish_experiment()
 
     def start_pause_resume(self):
