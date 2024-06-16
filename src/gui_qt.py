@@ -243,10 +243,16 @@ class GuiQt(QMainWindow):
                     plot_peaks=False)
                 if self.is_experiment_current(experiment_uuid):
                     if deconvolution_status.get("exit_code") == 0:
-                        self.thread_safe_progress_text.append("{filename}".format(filename=filename))
+                        self.thread_safe_progress_text.append("[{ts}] OK {filename}".format(
+                            ts=datetime.now().strftime("%H:%M:%S"),
+                            filename=filename
+                        ))
                     else:
                         # TODO log as error
-                        self.thread_safe_progress_text.append("{filename} failed".format(filename=filename))
+                        self.thread_safe_progress_text.append("[{ts}] ERROR {filename}".format(
+                            ts=datetime.now().strftime("%H:%M:%S"),
+                            filename=filename
+                        ))
                         self.thread_safe_progress_text.append(deconvolution_status.get("error_message").strip())
                     self.progress_percent = round((i + 1) / len(filenames) * 100, 2)
                     self.label_progress.setText(f"Progress: {self.progress_percent}%")
