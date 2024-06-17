@@ -4,3 +4,4 @@ lmfit
 matplotlib
 pandas
 jproperties
+numpy

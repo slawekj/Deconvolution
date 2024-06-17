@@ -117,7 +117,7 @@ class Deconvolver:
                 method=method)
 
             peak_index = 0
-            matplotlib.use("SVG")
+            matplotlib.use("agg")
             plt.clf()
             ax = plt.subplot(111)
             ax.plot(x, signal, label='signal')
