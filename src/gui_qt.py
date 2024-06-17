@@ -104,7 +104,8 @@ class GuiQt(QMainWindow):
         self.button_reset.clicked.connect(self.reset_experiment)
 
         # async event loop
-        self.button_start.clicked.connect(lambda: QThreadPool.globalInstance().start(AsyncExecution(self.start_pause_resume)))
+        self.button_start.clicked.connect(
+            lambda: QThreadPool.globalInstance().start(AsyncExecution(self.start_pause_resume)))
 
         self.deconvolver = Deconvolver()
         self.experiment_uuid = None
@@ -156,9 +157,6 @@ class GuiQt(QMainWindow):
         with open(signal_files, "r") as file:
             for line in file.readlines():
                 self.text_signal_files.append(line.strip())
-
-    def clear_files(self):
-        self.text_signal_files.setText("")
 
     def save_default_signal_files(self):
         with open(self.default_signal_files, "w") as file:
