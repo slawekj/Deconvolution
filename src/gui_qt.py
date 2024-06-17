@@ -105,7 +105,7 @@ class GuiQt(QMainWindow):
 
         # async event loop
         self.threadpool = QThreadPool()
-        self.button_start.clicked.connect(self.async_start_pause_resume)
+        self.button_start.clicked.connect(lambda: self.threadpool.start(AsyncExecution(self.start_pause_resume)))
 
         self.deconvolver = Deconvolver()
         self.experiment_uuid = None
@@ -118,10 +118,6 @@ class GuiQt(QMainWindow):
         self.save_default_properties()
         self.save_default_signal_files()
         super().closeEvent(event)
-
-    def async_start_pause_resume(self):
-        execution = AsyncExecution(self.start_pause_resume)
-        self.threadpool.start(execution)
 
     def select_files(self):
         filenames, _ = QFileDialog.getOpenFileNames(self, "Open file(s)", "",
