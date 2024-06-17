@@ -256,7 +256,7 @@ class GuiQt(QMainWindow):
                         self.thread_safe_progress_text.append(deconvolution_status.get("error_message").strip())
                     self.progress_percent = round((i + 1) / len(filenames) * 100, 2)
                     self.label_progress.setText(f"Progress: {self.progress_percent}%")
-                    self.experiment_checkpoint = filename
+                    self.experiment_checkpoint = i
         if self.is_experiment_current(experiment_uuid):
             self.thread_safe_progress_text.append("{exp} finished".format(exp=experiment_label))
             self.finish_experiment()
@@ -287,7 +287,7 @@ class GuiQt(QMainWindow):
             if len(filenames) > 0:
                 first_index = 1
                 if self.experiment_checkpoint is not None:
-                    first_index = filenames.index(self.experiment_checkpoint) + 1
+                    first_index = self.experiment_checkpoint + 1
                 self.run(
                     filenames=filenames,
                     experiment_label=experiment_label,
