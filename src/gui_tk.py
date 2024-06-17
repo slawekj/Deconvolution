@@ -153,7 +153,7 @@ class GuiTk(ctk.CTk):
         )
         filenames = fd.askopenfilenames(
             title="Open file(s)",
-            initialdir=pathlib.Path.home(),
+            initialdir="",
             filetypes=filetypes)
         if len(filenames) > 0:
             self.signal_files_textbox.delete("1.0", ctk.END)
@@ -294,7 +294,7 @@ class GuiTk(ctk.CTk):
                             deconvolution_status.get("error_message").strip())
                     self.progress_label.configure(
                         text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
-                    self.experiment_checkpoint = filename
+                    self.experiment_checkpoint = i
         if self.is_experiment_current(experiment_uuid):
             self.log_info_progress_line(
                 "{exp} finished".format(exp=experiment_label))
@@ -327,8 +327,7 @@ class GuiTk(ctk.CTk):
             if len(filenames) > 0:
                 first_index = 1
                 if self.experiment_checkpoint is not None:
-                    first_index = filenames.index(
-                        self.experiment_checkpoint) + 1
+                    first_index = self.experiment_checkpoint + 1
                 self.run(filenames=filenames,
                          experiment_label=experiment_label,
                          experiment_uuid=experiment_uuid,
