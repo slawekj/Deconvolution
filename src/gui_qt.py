@@ -104,8 +104,7 @@ class GuiQt(QMainWindow):
         self.button_reset.clicked.connect(self.reset_experiment)
 
         # async event loop
-        self.threadpool = QThreadPool()
-        self.button_start.clicked.connect(lambda: self.threadpool.start(AsyncExecution(self.start_pause_resume)))
+        self.button_start.clicked.connect(lambda: QThreadPool.globalInstance().start(AsyncExecution(self.start_pause_resume)))
 
         self.deconvolver = Deconvolver()
         self.experiment_uuid = None
