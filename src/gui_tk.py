@@ -1,3 +1,5 @@
+import webbrowser
+
 import customtkinter as ctk
 import pathlib
 import uuid
@@ -233,6 +235,27 @@ class GuiTk(ctk.CTk):
     def is_experiment_current(self, experiment_uuid):
         return self.experiment_uuid == experiment_uuid
 
+    def open_experiment_directory(self, _, directory):
+        webbrowser.open(pathlib.Path(directory).as_uri())
+
+    def log_experiment_hyperlink_line(self, output_directory):
+        self.progress_textbox.insert(ctk.END, "[{ts}] OPEN ".format(
+            ts=datetime.now().strftime("%H:%M:%S")
+        ))
+        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
+        self.progress_textbox.tag_add("brown_letters",
+                                      f"1.0 + {current_text_length - 6} chars",
+                                      f"1.0 + {current_text_length - 2} chars")
+        self.progress_textbox.tag_config("brown_letters", foreground="brown")
+        self.progress_textbox.insert(ctk.END, "{label}\n".format(label=output_directory))
+        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
+        self.progress_textbox.tag_add("hyperlink",
+                                      f"1.0 + {current_text_length - len(output_directory) - 2} chars",
+                                      f"1.0 + {current_text_length - 2} chars")
+        self.progress_textbox.tag_config("hyperlink", foreground="brown", underline=1)
+        self.progress_textbox.tag_bind("hyperlink", "<Button-1>",
+                                       lambda event: self.open_experiment_directory(event, output_directory))
+
     def log_info_progress_line(self, progress_line):
         self.progress_textbox.insert(ctk.END, "[{ts}] INFO ".format(
             ts=datetime.now().strftime("%H:%M:%S")
@@ -274,6 +297,7 @@ class GuiTk(ctk.CTk):
 
     def run(self, experiment_label, experiment_uuid, filenames, first_index, last_index):
         properties = self.extract_properties()
+        deconvolution_status = None
         for i in range(first_index, last_index):
             if self.is_experiment_current(experiment_uuid):
                 filename = filenames[i]
@@ -296,8 +320,9 @@ class GuiTk(ctk.CTk):
                         text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
                     self.experiment_checkpoint = i
         if self.is_experiment_current(experiment_uuid):
-            self.log_info_progress_line(
-                "{exp} finished".format(exp=experiment_label))
+            self.log_info_progress_line("{exp} finished".format(exp=experiment_label))
+            if deconvolution_status is not None:
+                self.log_experiment_hyperlink_line(deconvolution_status.get("output_dir"))
             self.finish_experiment()
 
     def start_pause_resume(self):
@@ -307,8 +332,7 @@ class GuiTk(ctk.CTk):
             self.start_experiment(experiment_label, experiment_uuid)
             filenames = self.extract_file_names()
             if len(filenames) > 0:
-                self.log_info_progress_line(
-                    "{exp} started".format(exp=experiment_label))
+                self.log_info_progress_line("{exp} started".format(exp=experiment_label))
                 self.run(filenames=filenames,
                          experiment_label=experiment_label,
                          experiment_uuid=experiment_uuid,
