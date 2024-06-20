@@ -23,6 +23,20 @@ class GuiTk(ctk.CTk):
         self.default_signal_files = os.path.join(
             dir_path, "..", "etc", "files.txt")
 
+        # Set the window size
+        window_width = 800
+        window_height = 600
+        self.geometry(f"{window_width}x{window_height}")
+
+        # Calculate the center position
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        center_x = int((screen_width - window_width) / 2)
+        center_y = int((screen_height - window_height) / 2)
+
+        # Set the window position to the center of the screen
+        self.geometry(f"+{center_x}+{center_y}")
+
         ctk.set_appearance_mode("System")
         ctk.set_default_color_theme("blue")
 
