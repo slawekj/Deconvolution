@@ -260,7 +260,7 @@ class Deconvolver:
         finally:
             with open(path_utils.join(output_dir, "experiment.properties"), "w") as output:
                 for p in properties:
-                    output.write(p + "=" + properties[p] + "\n")
+                    output.write(self.escape(p) + "=" + self.escape(properties[p]) + "\n")
 
     def determine_limits(self, properties, parameter_name, parameter_default_min, parameter_default_max):
         limits = {}
@@ -293,6 +293,10 @@ class Deconvolver:
                 limits["value"] = parameter_default_min
 
         return limits
+
+    @staticmethod
+    def escape(s):
+        return s.encode("unicode_escape").decode("utf-8")
 
     @staticmethod
     def init_peaks():
