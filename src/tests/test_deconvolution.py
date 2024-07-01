@@ -1,9 +1,8 @@
-from jproperties import Properties
-from deconvolution import Deconvolver
 import unittest
-import sys
-import os
-sys.path.append(os.path.join(sys.path[0], "..", "src"))
+
+from jproperties import Properties
+
+from src.deconvolution import Deconvolver
 
 
 class DeconvolverTest(unittest.TestCase):

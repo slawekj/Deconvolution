@@ -33,4 +33,9 @@ pip install -r requirements.txt
 python src/main_tk.py
 ```
 
+Also, you can test the source code by:
+```commandline
+python -m unittest discover -v -s src/tests
+```
+
 Happy Deconvolving!
