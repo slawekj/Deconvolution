@@ -269,6 +269,10 @@ class GuiTk(ctk.CTk):
         self.progress_textbox.tag_config("hyperlink", foreground="brown", underline=1)
         self.progress_textbox.tag_bind("hyperlink", "<Button-1>",
                                        lambda event: self.open_experiment_directory(event, output_directory))
+        self.progress_textbox.tag_bind("hyperlink", "<Enter>",
+                                       lambda event: self.progress_textbox.configure(cursor="hand2"))
+        self.progress_textbox.tag_bind("hyperlink", "<Leave>",
+                                       lambda event: self.progress_textbox.configure(cursor=""))
 
     def log_info_progress_line(self, progress_line):
         self.progress_textbox.insert(ctk.END, "[{ts}] INFO ".format(
