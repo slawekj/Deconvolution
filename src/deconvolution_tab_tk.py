@@ -9,7 +9,7 @@ from tkinter import filedialog as fd
 import customtkinter as ctk
 from jproperties import Properties
 
-from src.deconvolution import Deconvolver
+from deconvolution import Deconvolver
 
 
 class DeconvolutionTab:
