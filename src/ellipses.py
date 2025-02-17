@@ -130,22 +130,27 @@ def print_avg_z_rings(compute_sum_and_count_inside_ellipse,
     rows = [row for row in long_diameter if row[0] > 0 and row[1] > 0]
 
     # Initialize dynamic programming table
-    dp = []
+    sums = [0] * len(rows)
+    counts = [0] * len(rows)
 
     for i in range(len(rows)):
         row = rows[i]
         r1 = row[0]
         r2 = r1 / radii_ratio
+        sums[i], counts[i] = compute_sum_and_count_inside_ellipse(grid_z, grid_x, grid_y, r1, r2)
 
+    for i in range(len(rows)):
+        row = rows[i]
+        r1 = row[0]
+        r2 = r1 / radii_ratio
         if i == 0:
-            sum_z, count_z = compute_sum_and_count_inside_ellipse(grid_z, grid_x, grid_y, r1, r2)
-            dp.append((sum_z, count_z))
+            sum_z = sums[i]
+            count_z = counts[i]
             print(f"Ellipse r1={r1:.2f} r2={r2:.2f}: avg z: {sum_z / count_z:.2f}")
         else:
-            smaller_sum_z, smaller_count_z = dp[i - 1]
-            sum_z, count_z = compute_sum_and_count_inside_ellipse(grid_z, grid_x, grid_y, r1, r2)
-            dp.append((sum_z, count_z))
-            print(f"Ring r1={r1:.2f} r2={r2:.2f}: avg z: {(sum_z - smaller_sum_z) / (count_z - smaller_count_z):.2f}")
+            sum_z = sums[i] - sums[i - 1]
+            count_z = counts[i] - counts[i - 1]
+            print(f"Ring r1={r1:.2f} r2={r2:.2f}: avg z: {sum_z / count_z:.2f}")
 
 
 if __name__ == '__main__':
