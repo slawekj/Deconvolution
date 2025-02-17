@@ -1,6 +1,7 @@
 import customtkinter as ctk
 
 from src.deconvolution_tab_tk import DeconvolutionTab
+from src.ellipses_tab_tk import EllipsesTab
 
 
 class GuiTk(ctk.CTk):
@@ -33,13 +34,13 @@ class GuiTk(ctk.CTk):
         self.tab_view.pack(expand=True, fill="both")
 
         # Create tabs
-        self.deconvolution_tab = DeconvolutionTab(self.tab_view.add("Deconvolution"))
-        self.ellipses_tab = self.tab_view.add("Ellipses")
-
-        # Add simple label to Tab 2
-        self.label_janusz = ctk.CTkLabel(master=self.ellipses_tab, text="Ellipses tool coming soon...")
-        self.label_janusz.pack(pady=12, padx=10)
+        self.tabs = [
+            DeconvolutionTab(self.tab_view.add("Deconvolution")),
+            EllipsesTab(self.tab_view.add("Ellipses"))
+        ]
 
     def on_closing(self):
-        self.deconvolution_tab.on_closing()
+        for tab in self.tabs:
+            if hasattr(tab, 'on_closing'):
+                tab.on_closing()
         self.destroy()

@@ -23,10 +23,10 @@ class DeconvolutionTab:
         self.default_signal_files = os.path.join(
             dir_path, "..", "etc", "files.txt")
 
-        tab.grid_columnconfigure(0, weight=1)
-        tab.grid_columnconfigure(1, weight=1)
-        tab.grid_columnconfigure(2, weight=1)
-        tab.grid_rowconfigure(0, weight=1)
+        self.tab.grid_columnconfigure(0, weight=1)
+        self.tab.grid_columnconfigure(1, weight=1)
+        self.tab.grid_columnconfigure(2, weight=1)
+        self.tab.grid_rowconfigure(0, weight=1)
 
         self.signal_selection_frame = ctk.CTkFrame(master=self.tab)
         self.signal_selection_frame.grid(
