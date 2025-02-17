@@ -11,7 +11,7 @@ class EllipsesTab:
         self.textbox.insert(ctk.END,"""
 Currently, the ellipses tool offers a command line interface (CLI) only, usage:
         
-    python src/ellypses.py \\
+    python src/ellipses.py \\
         --long-diameter-file sample_data/ellipses/coated_63_long.tsv \\
         --short-diameter-file sample_data/ellipses/coated_63_short.tsv \\
         --output-file coated_63_extrapolation.dpt
