@@ -39,8 +39,7 @@ class GuiTk(ctk.CTk):
             EllipsesTab(self.tab_view.add("Ellipses"))
         ]
 
-        # TODO remove
-        self.tab_view.set("Ellipses")
+        self.tab_view.set("Deconvolution")
 
     def on_closing(self):
         for tab in self.tabs:
