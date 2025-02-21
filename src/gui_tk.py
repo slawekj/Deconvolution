@@ -39,6 +39,9 @@ class GuiTk(ctk.CTk):
             EllipsesTab(self.tab_view.add("Ellipses"))
         ]
 
+        # TODO remove
+        self.tab_view.set("Ellipses")
+
     def on_closing(self):
         for tab in self.tabs:
             if hasattr(tab, 'on_closing'):

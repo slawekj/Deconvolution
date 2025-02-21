@@ -1,0 +1,4 @@
+{
+    "long diameter": "N/A",
+    "short diameter": "N/A"
+}

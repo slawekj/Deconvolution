@@ -84,7 +84,10 @@ def extrapolate_ellipse(long_diameter_file, short_diameter_file, output_file, sk
         return sum_values, count_values
 
     # Generate a grid of points
-    grid_x, grid_y = np.mgrid[min_long_diameter:max_long_diameter:500j, min_short_diameter:max_short_diameter:500j]
+    grid_x, grid_y = np.mgrid[
+                     min_long_diameter:max_long_diameter:(500 * 1j),
+                     min_short_diameter:max_short_diameter:(500 * 1j)
+                     ]
 
     # Apply the step function to the distances to get the z-values
     grid_z = step_function(grid_x, grid_y)

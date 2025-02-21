@@ -19,9 +19,9 @@ class DeconvolutionTab:
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
         self.default_properties_file = os.path.join(
-            dir_path, "..", "etc", "default.properties")
+            dir_path, "..", "etc", "deconvolution", "default.properties")
         self.default_signal_files = os.path.join(
-            dir_path, "..", "etc", "files.txt")
+            dir_path, "..", "etc", "deconvolution", "files.txt")
 
         self.tab.grid_columnconfigure(0, weight=1)
         self.tab.grid_columnconfigure(1, weight=1)
