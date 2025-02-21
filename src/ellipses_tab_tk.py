@@ -11,7 +11,7 @@ import customtkinter as ctk
 from click.testing import CliRunner
 from jproperties import Properties
 
-from src.ellipses import extrapolate_ellipse
+from ellipses import extrapolate_ellipse
 
 import os.path as path_utils
 
