@@ -1,7 +1,7 @@
 import customtkinter as ctk
 
-from deconvolution_tab_tk import DeconvolutionTab
-from ellipses_tab_tk import EllipsesTab
+from src.ui.deconvolution_tab import DeconvolutionTab
+from src.ui.ellipses_tab import EllipsesTab
 
 
 class GuiTk(ctk.CTk):

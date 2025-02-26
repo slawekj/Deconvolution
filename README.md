@@ -28,9 +28,14 @@ The easiest way to run and develop this project is by installing dependencies fi
 pip install -r requirements.txt
 ```
 
-, and then running the main program:
+, and then running the GUI:
 ```commandline
-python src/main_tk.py
+python gui.py
+```
+
+, or a CLI:
+```commandline
+python src/logic/ellipses.py
 ```
 
 Also, you can test the source code by:

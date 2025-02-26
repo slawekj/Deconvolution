@@ -1,8 +1,8 @@
 import json
 import os
+import os.path as path_utils
 import pathlib
 import uuid
-import webbrowser
 from datetime import datetime
 from threading import Thread
 from tkinter import filedialog as fd
@@ -11,9 +11,8 @@ import customtkinter as ctk
 from click.testing import CliRunner
 from jproperties import Properties
 
-from ellipses import extrapolate_ellipse
-
-import os.path as path_utils
+from src.logic.ellipses import extrapolate_ellipse
+from src.ui.progress_textbox import ProgressTextbox
 
 
 class EllipsesTab:
@@ -23,9 +22,9 @@ class EllipsesTab:
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
         self.default_properties_file = os.path.join(
-            dir_path, "..", "etc", "ellipses", "default.properties")
+            dir_path, "..", "..", "etc", "ellipses", "default.properties")
         self.default_signal_files = os.path.join(
-            dir_path, "..", "etc", "ellipses", "files.txt")
+            dir_path, "..", "..", "etc", "ellipses", "files.txt")
 
         self.tab.grid_columnconfigure(0, weight=1)
         self.tab.grid_columnconfigure(1, weight=1)
@@ -97,8 +96,8 @@ class EllipsesTab:
             master=self.progress_frame, text="Progress:")
         self.progress_label.pack(pady=12, padx=10)
 
-        self.progress_textbox = ctk.CTkTextbox(master=self.progress_frame, wrap="none",
-                                               font=ctk.CTkFont(family="Courier"))
+        self.progress_textbox = ProgressTextbox(master=self.progress_frame, wrap="none",
+                                                font=ctk.CTkFont(family="Courier"))
         self.progress_textbox.pack(pady=12, padx=10, expand=True, fill="both")
 
         self.start_button = ctk.CTkButton(master=self.progress_frame, text="Run",
@@ -184,7 +183,7 @@ class EllipsesTab:
                 experiment_label = datetime.now().strftime("experiment_%m_%d_%Y__%H_%M_%S")
                 experiment_uuid = str(uuid.uuid4())
                 self.start_experiment(experiment_label, experiment_uuid)
-                self.log_info_progress_line("{exp} started".format(exp=experiment_label))
+                self.progress_textbox.log_info_progress_line("{exp} started".format(exp=experiment_label))
 
                 # Prepare experiment
                 if self.diameter_files["long diameter"] == "N/A":
@@ -210,14 +209,14 @@ class EllipsesTab:
 
                 # Report experiment
                 if result.exit_code == 0:
-                    self.log_info_progress_line("{exp} finished".format(exp=experiment_label))
-                    self.log_info_progress_line("results:\n" + result.stdout)
-                    self.log_experiment_hyperlink_line(output_dir)
+                    self.progress_textbox.log_info_progress_line("{exp} finished".format(exp=experiment_label))
+                    self.progress_textbox.log_info_progress_line("results:\n" + result.stdout)
+                    self.progress_textbox.log_experiment_hyperlink_line(output_dir)
                 else:
-                    self.log_error_progress_line("\n" + result.stdout)
+                    self.progress_textbox.log_error_progress_line("\n" + result.stdout)
                 self.finish_experiment()
         except Exception as e:
-            self.log_error_progress_line(str(e))
+            self.progress_textbox.log_error_progress_line(str(e))
             self.finish_experiment()
 
     def extract_properties(self):
@@ -250,67 +249,3 @@ class EllipsesTab:
 
     def is_experiment_current(self, experiment_uuid):
         return self.experiment_uuid == experiment_uuid
-
-    def open_experiment_directory(self, _, directory):
-        webbrowser.open(pathlib.Path(directory).as_uri())
-
-    def log_experiment_hyperlink_line(self, output_directory):
-        self.progress_textbox.insert(ctk.END, "[{ts}] OPEN ".format(
-            ts=datetime.now().strftime("%H:%M:%S")
-        ))
-        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
-        self.progress_textbox.tag_add("brown_letters",
-                                      f"1.0 + {current_text_length - 6} chars",
-                                      f"1.0 + {current_text_length - 2} chars")
-        self.progress_textbox.tag_config("brown_letters", foreground="brown")
-        self.progress_textbox.insert(ctk.END, "{label}\n".format(label=output_directory))
-        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
-        self.progress_textbox.tag_add("hyperlink",
-                                      f"1.0 + {current_text_length - len(output_directory) - 2} chars",
-                                      f"1.0 + {current_text_length - 2} chars")
-        self.progress_textbox.tag_config("hyperlink", foreground="brown", underline=1)
-        self.progress_textbox.tag_bind("hyperlink", "<Button-1>",
-                                       lambda event: self.open_experiment_directory(event, output_directory))
-        self.progress_textbox.tag_bind("hyperlink", "<Enter>",
-                                       lambda event: self.progress_textbox.configure(cursor="hand2"))
-        self.progress_textbox.tag_bind("hyperlink", "<Leave>",
-                                       lambda event: self.progress_textbox.configure(cursor=""))
-
-    def log_info_progress_line(self, progress_line):
-        self.progress_textbox.insert(ctk.END, "[{ts}] INFO ".format(
-            ts=datetime.now().strftime("%H:%M:%S")
-        ))
-        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
-        self.progress_textbox.tag_add("blue_letters",
-                                      f"1.0 + {current_text_length - 6} chars",
-                                      f"1.0 + {current_text_length - 2} chars")
-        self.progress_textbox.tag_config("blue_letters", foreground="blue")
-        self.progress_textbox.insert(ctk.END, "{progress_line}\n".format(
-            progress_line=progress_line
-        ))
-
-    def log_ok_progress_line(self, progress_line):
-        self.progress_textbox.insert(ctk.END, "[{ts}] OK ".format(
-            ts=datetime.now().strftime("%H:%M:%S")
-        ))
-        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
-        self.progress_textbox.tag_add("green_letters",
-                                      f"1.0 + {current_text_length - 4} chars",
-                                      f"1.0 + {current_text_length - 2} chars")
-        self.progress_textbox.tag_config("green_letters", foreground="green")
-        self.progress_textbox.insert(ctk.END, "{progress_line}\n".format(
-            progress_line=progress_line
-        ))
-
-    def log_error_progress_line(self, progress_line):
-        self.progress_textbox.insert(ctk.END, "[{ts}] ERROR ".format(
-            ts=datetime.now().strftime("%H:%M:%S")
-        ))
-        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
-        self.progress_textbox.tag_add("red_letters",
-                                      f"1.0 + {current_text_length - 7} chars",
-                                      f"1.0 + {current_text_length - 2} chars")
-        self.progress_textbox.tag_config("red_letters", foreground="red")
-        self.progress_textbox.insert(ctk.END, "{progress_line}\n".format(
-            progress_line=progress_line
-        ))

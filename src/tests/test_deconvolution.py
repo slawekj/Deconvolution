@@ -2,7 +2,7 @@ import unittest
 
 from jproperties import Properties
 
-from src.deconvolution import Deconvolver
+from src.logic.deconvolution import Deconvolver
 
 
 class DeconvolverTest(unittest.TestCase):

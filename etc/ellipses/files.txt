@@ -1,4 +1,4 @@
 {
-    "long diameter": "N/A",
-    "short diameter": "N/A"
+    "long diameter": "/Users/jslawek/Playground/Deconvolution/sample_data/ellipses/coated_63_long.tsv",
+    "short diameter": "/Users/jslawek/Playground/Deconvolution/sample_data/ellipses/coated_63_short.tsv"
 }

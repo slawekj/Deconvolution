@@ -1,7 +1,6 @@
 import os
 import pathlib
 import uuid
-import webbrowser
 from datetime import datetime
 from threading import Thread
 from tkinter import filedialog as fd
@@ -9,7 +8,8 @@ from tkinter import filedialog as fd
 import customtkinter as ctk
 from jproperties import Properties
 
-from deconvolution import Deconvolver
+from src.logic.deconvolution import Deconvolver
+from src.ui.progress_textbox import ProgressTextbox
 
 
 class DeconvolutionTab:
@@ -19,9 +19,9 @@ class DeconvolutionTab:
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
         self.default_properties_file = os.path.join(
-            dir_path, "..", "etc", "deconvolution", "default.properties")
+            dir_path, "..", "..", "etc", "deconvolution", "default.properties")
         self.default_signal_files = os.path.join(
-            dir_path, "..", "etc", "deconvolution", "files.txt")
+            dir_path, "..", "..", "etc", "deconvolution", "files.txt")
 
         self.tab.grid_columnconfigure(0, weight=1)
         self.tab.grid_columnconfigure(1, weight=1)
@@ -89,8 +89,8 @@ class DeconvolutionTab:
         self.progress_bar.pack(pady=12, padx=10)
         self.progress_bar.set(0.0)
 
-        self.progress_textbox = ctk.CTkTextbox(master=self.progress_frame, wrap="none",
-                                               font=ctk.CTkFont(family="Courier"))
+        self.progress_textbox = ProgressTextbox(master=self.progress_frame, wrap="none",
+                                                font=ctk.CTkFont(family="Courier"))
         self.progress_textbox.pack(pady=12, padx=10, expand=True, fill="both")
 
         self.start_button = ctk.CTkButton(master=self.progress_frame, text="Start",
@@ -229,70 +229,6 @@ class DeconvolutionTab:
     def is_experiment_current(self, experiment_uuid):
         return self.experiment_uuid == experiment_uuid
 
-    def open_experiment_directory(self, _, directory):
-        webbrowser.open(pathlib.Path(directory).as_uri())
-
-    def log_experiment_hyperlink_line(self, output_directory):
-        self.progress_textbox.insert(ctk.END, "[{ts}] OPEN ".format(
-            ts=datetime.now().strftime("%H:%M:%S")
-        ))
-        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
-        self.progress_textbox.tag_add("brown_letters",
-                                      f"1.0 + {current_text_length - 6} chars",
-                                      f"1.0 + {current_text_length - 2} chars")
-        self.progress_textbox.tag_config("brown_letters", foreground="brown")
-        self.progress_textbox.insert(ctk.END, "{label}\n".format(label=output_directory))
-        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
-        self.progress_textbox.tag_add("hyperlink",
-                                      f"1.0 + {current_text_length - len(output_directory) - 2} chars",
-                                      f"1.0 + {current_text_length - 2} chars")
-        self.progress_textbox.tag_config("hyperlink", foreground="brown", underline=1)
-        self.progress_textbox.tag_bind("hyperlink", "<Button-1>",
-                                       lambda event: self.open_experiment_directory(event, output_directory))
-        self.progress_textbox.tag_bind("hyperlink", "<Enter>",
-                                       lambda event: self.progress_textbox.configure(cursor="hand2"))
-        self.progress_textbox.tag_bind("hyperlink", "<Leave>",
-                                       lambda event: self.progress_textbox.configure(cursor=""))
-
-    def log_info_progress_line(self, progress_line):
-        self.progress_textbox.insert(ctk.END, "[{ts}] INFO ".format(
-            ts=datetime.now().strftime("%H:%M:%S")
-        ))
-        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
-        self.progress_textbox.tag_add("blue_letters",
-                                      f"1.0 + {current_text_length - 6} chars",
-                                      f"1.0 + {current_text_length - 2} chars")
-        self.progress_textbox.tag_config("blue_letters", foreground="blue")
-        self.progress_textbox.insert(ctk.END, "{progress_line}\n".format(
-            progress_line=progress_line
-        ))
-
-    def log_ok_progress_line(self, progress_line):
-        self.progress_textbox.insert(ctk.END, "[{ts}] OK ".format(
-            ts=datetime.now().strftime("%H:%M:%S")
-        ))
-        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
-        self.progress_textbox.tag_add("green_letters",
-                                      f"1.0 + {current_text_length - 4} chars",
-                                      f"1.0 + {current_text_length - 2} chars")
-        self.progress_textbox.tag_config("green_letters", foreground="green")
-        self.progress_textbox.insert(ctk.END, "{progress_line}\n".format(
-            progress_line=progress_line
-        ))
-
-    def log_error_progress_line(self, progress_line):
-        self.progress_textbox.insert(ctk.END, "[{ts}] ERROR ".format(
-            ts=datetime.now().strftime("%H:%M:%S")
-        ))
-        current_text_length = len(self.progress_textbox.get("1.0", ctk.END))
-        self.progress_textbox.tag_add("red_letters",
-                                      f"1.0 + {current_text_length - 7} chars",
-                                      f"1.0 + {current_text_length - 2} chars")
-        self.progress_textbox.tag_config("red_letters", foreground="red")
-        self.progress_textbox.insert(ctk.END, "{progress_line}\n".format(
-            progress_line=progress_line
-        ))
-
     def run(self, experiment_label, experiment_uuid, filenames, first_index, last_index):
         properties = self.extract_properties()
         deconvolution_status = None
@@ -305,22 +241,22 @@ class DeconvolutionTab:
                     properties=properties)
                 if self.is_experiment_current(experiment_uuid):
                     if deconvolution_status.get("exit_code") == 0:
-                        self.log_ok_progress_line("{filename}".format(
+                        self.progress_textbox.log_ok_progress_line("{filename}".format(
                             filename=filename
                         ))
                     else:
-                        self.log_error_progress_line("{filename}".format(
+                        self.progress_textbox.log_error_progress_line("{filename}".format(
                             filename=filename
                         ))
-                        self.log_info_progress_line(
+                        self.progress_textbox.log_info_progress_line(
                             deconvolution_status.get("error_message").strip())
                     self.progress_label.configure(
                         text=f"Progress: {round((i + 1) / len(filenames) * 100, 2)}%")
                     self.experiment_checkpoint = i
         if self.is_experiment_current(experiment_uuid):
-            self.log_info_progress_line("{exp} finished".format(exp=experiment_label))
+            self.progress_textbox.log_info_progress_line("{exp} finished".format(exp=experiment_label))
             if deconvolution_status is not None:
-                self.log_experiment_hyperlink_line(deconvolution_status.get("output_dir"))
+                self.progress_textbox.log_experiment_hyperlink_line(deconvolution_status.get("output_dir"))
             self.finish_experiment()
 
     def start_pause_resume(self):
@@ -330,20 +266,20 @@ class DeconvolutionTab:
             self.start_experiment(experiment_label, experiment_uuid)
             filenames = self.extract_file_names()
             if len(filenames) > 0:
-                self.log_info_progress_line("{exp} started".format(exp=experiment_label))
+                self.progress_textbox.log_info_progress_line("{exp} started".format(exp=experiment_label))
                 self.run(filenames=filenames,
                          experiment_label=experiment_label,
                          experiment_uuid=experiment_uuid,
                          first_index=0,
                          last_index=len(filenames))
             else:
-                self.log_info_progress_line("No signal file(s) selected!")
+                self.progress_textbox.log_info_progress_line("No signal file(s) selected!")
                 self.finish_experiment()
         elif self.experiment_uuid is None and self.experiment_label is not None:
             experiment_label = self.experiment_label
             experiment_uuid = str(uuid.uuid4())
             self.resume_experiment(experiment_label, experiment_uuid)
-            self.log_info_progress_line(
+            self.progress_textbox.log_info_progress_line(
                 "{exp} resumed".format(exp=experiment_label))
             filenames = self.extract_file_names()
             if len(filenames) > 0:
@@ -356,11 +292,11 @@ class DeconvolutionTab:
                          first_index=first_index,
                          last_index=len(filenames))
             else:
-                self.log_info_progress_line("No signal file(s) selected!")
+                self.progress_textbox.log_info_progress_line("No signal file(s) selected!")
                 self.finish_experiment()
         else:
             self.pause_experiment()
-            self.log_info_progress_line(
+            self.progress_textbox.log_info_progress_line(
                 "{exp} paused".format(exp=self.experiment_label))
 
     def reset(self):
