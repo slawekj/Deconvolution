@@ -1,4 +1,4 @@
-from src.ui.window import GuiTk
+from src.ui.main_window import GuiTk
 
 if __name__ == "__main__":
     gui_tk = GuiTk()

@@ -1,20 +1,19 @@
 import os
-import pathlib
 import uuid
 from datetime import datetime
 from threading import Thread
 from tkinter import filedialog as fd
 
 import customtkinter as ctk
-from jproperties import Properties
 
 from src.logic.deconvolution import Deconvolver
 from src.ui.progress_textbox import ProgressTextbox
+from src.ui.properties_frame import PropertiesFrame
 
 
 class DeconvolutionTab:
-    def __init__(self, tab: ctk.CTkFrame):
-        self.tab = tab
+    def __init__(self, frame: ctk.CTkFrame):
+        self.frame = frame
         self.deconvolver = Deconvolver()
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -23,20 +22,22 @@ class DeconvolutionTab:
         self.default_signal_files = os.path.join(
             dir_path, "..", "..", "etc", "deconvolution", "files.txt")
 
-        self.tab.grid_columnconfigure(0, weight=1)
-        self.tab.grid_columnconfigure(1, weight=1)
-        self.tab.grid_columnconfigure(2, weight=1)
-        self.tab.grid_rowconfigure(0, weight=1)
+        self.frame.grid_columnconfigure(0, weight=1)
+        self.frame.grid_columnconfigure(1, weight=1)
+        self.frame.grid_columnconfigure(2, weight=1)
+        self.frame.grid_rowconfigure(0, weight=1)
 
-        self.signal_selection_frame = ctk.CTkFrame(master=self.tab)
+        self.signal_selection_frame = ctk.CTkFrame(master=self.frame)
         self.signal_selection_frame.grid(
             row=0, column=0, padx=10, pady=10, sticky="nsew")
 
-        self.model_selection_frame = ctk.CTkFrame(master=self.tab)
+        self.model_selection_frame = PropertiesFrame(master=self.frame,
+                                                     default_properties_file=self.default_properties_file,
+                                                     label="Fitting model properties:")
         self.model_selection_frame.grid(
             row=0, column=1, padx=10, pady=10, sticky="nsew")
 
-        self.progress_frame = ctk.CTkFrame(master=self.tab)
+        self.progress_frame = ctk.CTkFrame(master=self.frame)
         self.progress_frame.grid(
             row=0, column=2, padx=10, pady=10, sticky="nsew")
 
@@ -59,26 +60,6 @@ class DeconvolutionTab:
                                                     text="Clear selection",
                                                     command=lambda: Thread(target=self.clear_files).start())
         self.clear_selection_button.pack(pady=12, padx=10)
-
-        self.model_selection_label = ctk.CTkLabel(master=self.model_selection_frame,
-                                                  text="Fitting model properties:")
-        self.model_selection_label.pack(pady=12, padx=10)
-
-        self.model_selection_textbox = ctk.CTkTextbox(master=self.model_selection_frame, wrap="none",
-                                                      font=ctk.CTkFont(family="Courier"))
-        self.model_selection_textbox.pack(
-            pady=12, padx=10, expand=True, fill="both")
-        self.load_properties(self.default_properties_file)
-
-        self.model_open_button = ctk.CTkButton(master=self.model_selection_frame,
-                                               text="Open...",
-                                               command=lambda: Thread(target=self.select_properties_file).start())
-        self.model_open_button.pack(pady=12, padx=10)
-
-        self.model_save_button = ctk.CTkButton(master=self.model_selection_frame,
-                                               text="Save...",
-                                               command=lambda: Thread(target=self.save_properties).start())
-        self.model_save_button.pack(pady=12, padx=10)
 
         self.progress_label = ctk.CTkLabel(
             master=self.progress_frame, text="Progress:")
@@ -105,30 +86,6 @@ class DeconvolutionTab:
         self.experiment_label = None
         self.experiment_checkpoint = None
         self.reset_experiment()
-
-    def load_properties(self, file_path):
-        with open(file_path, "r") as file:
-            self.model_selection_textbox.delete(1.0, ctk.END)
-            for line in file.readlines():
-                self.model_selection_textbox.insert(ctk.END, line)
-
-    def save_default_properties(self):
-        with open(self.default_properties_file, "w") as file:
-            file.write(self.model_selection_textbox.get(
-                "1.0", ctk.END).strip())
-
-    def save_properties(self):
-        filetypes = (
-            ("Property file", "*.properties"),
-            ("All files", "*.*")
-        )
-        file = fd.asksaveasfile(title="Save property file",
-                                initialdir=pathlib.Path.home(),
-                                filetypes=filetypes)
-        if file is not None:
-            with file:
-                file.write(self.model_selection_textbox.get(
-                    "1.0", ctk.END).strip())
 
     def load_default_signal_files(self):
         with open(self.default_signal_files, "r") as file:
@@ -157,19 +114,6 @@ class DeconvolutionTab:
         for filename in filenames:
             self.signal_files_textbox.insert(ctk.END, filename + "\n")
 
-    def select_properties_file(self):
-        filetypes = (
-            ("Text files", "*.properties"),
-            ("All files", "*.*")
-        )
-        filename = fd.askopenfilename(
-            title="Open file",
-            initialdir=pathlib.Path.home(),
-            filetypes=filetypes
-        )
-        if len(filename) > 0:
-            self.load_properties(filename)
-
     def extract_file_names(self):
         filenames = []
         for line in self.signal_files_textbox.get("1.0", ctk.END).split("\n"):
@@ -178,13 +122,8 @@ class DeconvolutionTab:
                 filenames.append(stripped_line)
         return filenames
 
-    def extract_properties(self):
-        properties = Properties()
-        properties.load(self.model_selection_textbox.get("1.0", ctk.END))
-        return properties.properties
-
     def on_closing(self):
-        self.save_default_properties()
+        self.model_selection_frame.save_default_properties()
         self.save_signal_files()
 
     def reset_experiment(self):
@@ -230,7 +169,7 @@ class DeconvolutionTab:
         return self.experiment_uuid == experiment_uuid
 
     def run(self, experiment_label, experiment_uuid, filenames, first_index, last_index):
-        properties = self.extract_properties()
+        properties = self.model_selection_frame.extract_properties()
         deconvolution_status = None
         for i in range(first_index, last_index):
             if self.is_experiment_current(experiment_uuid):
