@@ -4,7 +4,7 @@ from src.ui.deconvolution_tab import DeconvolutionTab
 from src.ui.ellipses_tab import EllipsesTab
 
 
-class GuiTk(ctk.CTk):
+class MainWindow(ctk.CTk):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -39,6 +39,7 @@ class GuiTk(ctk.CTk):
             EllipsesTab(self.tab_view.add("Ellipses"))
         ]
 
+        # Set default tab
         self.tab_view.set("Deconvolution")
 
     def on_closing(self):

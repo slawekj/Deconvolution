@@ -79,7 +79,7 @@ class DeconvolutionTab:
         self.start_button.pack(pady=12, padx=10)
 
         self.reset_button = ctk.CTkButton(master=self.progress_frame, text="Reset",
-                                          command=lambda: Thread(target=self.reset).start())
+                                          command=lambda: Thread(target=self.reset_experiment).start())
         self.reset_button.pack(pady=12, padx=10)
 
         self.experiment_uuid = None
@@ -237,6 +237,3 @@ class DeconvolutionTab:
             self.pause_experiment()
             self.progress_textbox.log_info_progress_line(
                 "{exp} paused".format(exp=self.experiment_label))
-
-    def reset(self):
-        self.reset_experiment()
