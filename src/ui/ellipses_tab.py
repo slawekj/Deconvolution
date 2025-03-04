@@ -140,8 +140,8 @@ class EllipsesTab:
                 output_dir = path_utils.join(long_diameter_file_directory, experiment_label)
                 path_utils.exists(output_dir) or os.mkdir(output_dir)
                 properties = self.model_selection_frame.extract_properties()
-                output_file_name = properties["output_file_name"]
-                plot_file_name = properties["plot_file_name"]
+                output_file_name = properties["output_file_name"] or "output.png"
+                plot_file_name = properties["plot_file_name"] or "output.png"
 
                 # Run experiment
                 runner = CliRunner()
