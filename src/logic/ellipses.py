@@ -16,15 +16,28 @@ from matplotlib import pyplot as plt
               type=click.Path(exists=False),
               required=True,
               help='Path to the output file')
+@click.option('--plot-file', '-p',
+              type=click.Path(exists=False),
+              required=True,
+              help='Path to the plot file')
 @click.option('--skip-plotting-results',
               is_flag=True,
               default=False,
               help='Weather to skip plotting the results')
+@click.option('--skip-showing-results',
+              is_flag=True,
+              default=False,
+              help='Weather to skip showing the results')
 @click.option('--skip-printing-rings',
               is_flag=True,
               default=False,
               help='Weather to skip printing the ring avg z values')
-def extrapolate_ellipse(long_diameter_file, short_diameter_file, output_file, skip_plotting_results,
+def extrapolate_ellipse(long_diameter_file,
+                        short_diameter_file,
+                        output_file,
+                        plot_file,
+                        skip_plotting_results,
+                        skip_showing_results,
                         skip_printing_rings):
     # Load the tab-separated values files into NumPy arrays
     long_diameter = np.loadtxt(long_diameter_file, delimiter='\t')
@@ -110,13 +123,18 @@ def extrapolate_ellipse(long_diameter_file, short_diameter_file, output_file, sk
     # Save the matrix to a .dpt file
     np.savetxt(output_file, matrix, delimiter='\t')
 
+    plt.contourf(grid_x, grid_y, grid_z, cmap='viridis')
+    plt.colorbar(label='Z')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('Visualization based on cross-section data')
+
     # Plot the 2D contour plot
     if not skip_plotting_results:
-        plt.contourf(grid_x, grid_y, grid_z, cmap='viridis')
-        plt.colorbar(label='Z')
-        plt.xlabel('X')
-        plt.ylabel('Y')
-        plt.title('Visualization based on cross-section data')
+        plt.savefig(plot_file)
+        plt.close()
+
+    if not skip_showing_results:
         plt.show()
 
 
