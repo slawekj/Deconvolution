@@ -34,8 +34,9 @@ def count_blobs(input_path,
                 skip_saving_results):
     image = color.rgb2gray(io.imread(input_path))
 
-    box_max_x = image.shape[0] if box_max_x == -1 else box_max_x
-    box_max_y = image.shape[1] if box_max_y == -1 else box_max_x
+    # Correctly set box boundaries
+    box_max_x = image.shape[1] if box_max_x == -1 else box_max_x
+    box_max_y = image.shape[0] if box_max_y == -1 else box_max_y
 
     blobs_log = feature.blob_log(
         image,
