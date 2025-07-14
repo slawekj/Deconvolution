@@ -6,3 +6,4 @@ pandas
 jproperties
 numpy
 click
+scikit-image
