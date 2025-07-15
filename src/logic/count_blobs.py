@@ -52,7 +52,7 @@ def count_blobs(input_path,
     blobs_in_box = [
         (y, x, r)
         for y, x, r in blobs_log
-        if box_min_x <= x <= box_max_x and box_min_y <= y <= box_max_y
+        if box_min_x <= x < box_max_x and box_min_y <= y < box_max_y
     ]
 
     # Display
