@@ -18,29 +18,29 @@ components, i.e. $G_1 + G_2 + ... + G_6$.
 
 This program is written in Python and requires it to run! It was developed and tested using `Python 3.11.4`.
 
-Required Python dependencies are listed in `requirements.txt` file. 
+This project uses [Poetry](https://python-poetry.org/) for dependency management. 
 Additional system libraries may be required, see your operating system's manual if necessary.
 
 ## Development
 
-The easiest way to run and develop this project is by installing dependencies first:
+The easiest way to run and develop this project is by installing dependencies with Poetry:
 ```commandline
-pip install -r requirements.txt
+poetry install
 ```
 
 , and then running the GUI:
 ```commandline
-python gui.py
+poetry run python gui.py
 ```
 
 , or a CLI:
 ```commandline
-python src/logic/ellipses.py
+poetry run python src/logic/ellipses.py
 ```
 
 Also, you can test the source code by:
 ```commandline
-python -m unittest discover -v -s src/tests
+poetry run python -m unittest discover -v -s src/tests
 ```
 
 Happy Deconvolving!

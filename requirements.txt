@@ -1,9 +1,0 @@
-tk
-customtkinter
-lmfit
-matplotlib
-pandas
-jproperties
-numpy
-click
-scikit-image
