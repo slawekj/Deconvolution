@@ -19,6 +19,10 @@ components, i.e. $G_1 + G_2 + ... + G_6$.
 This program is written in Python and requires it to run! It was developed and tested using `Python 3.11.4`.
 Specifically, on Mac OS:
 ```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+, then:
+```
 brew install python python-tk
 ```
 
