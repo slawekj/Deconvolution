@@ -17,6 +17,10 @@ components, i.e. $G_1 + G_2 + ... + G_6$.
 ## Requirements
 
 This program is written in Python and requires it to run! It was developed and tested using `Python 3.11.4`.
+Specifically, on Mac OS:
+```
+brew install python python-tk
+```
 
 This project uses [Poetry](https://python-poetry.org/) for dependency management. 
 Additional system libraries may be required, see your operating system's manual if necessary.
