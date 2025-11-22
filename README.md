@@ -23,7 +23,10 @@ brew install python python-tk
 ```
 
 This project uses [Poetry](https://python-poetry.org/) for dependency management. 
-Additional system libraries may be required, see your operating system's manual if necessary.
+Additional system libraries may be required, see your operating system's manual if necessary. On Mac OS:
+```
+brew install poetry
+```
 
 ## Development
 
