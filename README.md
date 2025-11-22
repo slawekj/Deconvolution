@@ -16,20 +16,18 @@ components, i.e. $G_1 + G_2 + ... + G_6$.
 
 ## Requirements
 
-This program is written in Python and requires it to run! It was developed and tested using `Python 3.11.4`.
-Specifically, on Mac OS:
+This program is written in Python and requires it to run! It was developed and tested using `Python 3.11.4`
+on Mac OS but it will also run on Windows and Linux. 
+
+### Mac OS Installation guide
+
+First, install [Brew](https://brew.sh/) package manager:
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
-, then:
+, then install the required system dependencies:
 ```
-brew install python python-tk
-```
-
-This project uses [Poetry](https://python-poetry.org/) for dependency management. 
-Additional system libraries may be required, see your operating system's manual if necessary. On Mac OS:
-```
-brew install poetry
+brew install python python-tk poetry
 ```
 
 ## Development
