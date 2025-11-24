@@ -168,3 +168,7 @@ poetry.lock
 # experiments
 sample_data/deconvolution/experiment_*
 sample_data/ellipses/experiment_*
+
+# VS code stuff
+*.code-workspace
+.vscode
